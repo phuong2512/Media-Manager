@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:media_download_manager/models/media.dart';
 import 'package:media_download_manager/views/load_media/audio_tab.dart';
 import 'package:media_download_manager/views/load_media/video_tab.dart';
 
@@ -17,45 +18,49 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
   bool isSortNewestFirst = true;
   final TextEditingController _searchController = TextEditingController();
 
-  List demoAudioList = [
-    {
-      "path": "audio/audio1.mp3",
-      "duration": "05:00",
-      "size": 10,
-      "last_modified": '2025-09-15 14:30:25',
-    },
-    {
-      "path": "audio/audio2.mp3",
-      "duration": "00:50",
-      "size": 15,
-      "last_modified": '2025-09-15 15:30:25',
-    },
-    {
-      "path": "audio/audio3.mp3",
-      "duration": "03:05",
-      "size": 20,
-      "last_modified": '2025-09-15 14:30:25',
-    },
-  ];
-  List demoVideoList = [
-    {
-      "path": "video/video1.mp4",
-      "duration": "05:00",
-      "size": 10,
-      "last_modified": '2025-09-14 14:30:25',
-    },
-    {
-      "path": "video/video2.mp4",
-      "duration": "00:50",
-      "size": 15,
-      "last_modified": '2025-09-15 10:30:25',
-    },
-    {
-      "path": "video/video3.mp4",
-      "duration": "03:05",
-      "size": 20,
-      "last_modified": '2025-09-10 14:30:25',
-    },
+  List<Media> demoMediaList = [
+    Media(
+      path: "audio/audio1.mp3",
+      duration: "05:00",
+      size: 15,
+      lastModified: DateTime.parse('2025-09-15 14:30:25'),
+      type: "Audio",
+    ),
+    Media(
+      path: "audio/audio2.mp3",
+      duration: "00:50",
+      size: 50,
+      lastModified: DateTime.parse('2025-09-15 15:30:25'),
+      type: "Audio",
+    ),
+    Media(
+      path: "audio/audio3.mp3",
+      duration: "03:05",
+      size: 20,
+      lastModified: DateTime.parse('2025-09-15 14:30:25'),
+      type: "Audio",
+    ),
+    Media(
+      path: "video/video1.mp4",
+      duration: "05:00",
+      size: 50,
+      lastModified: DateTime.parse('2025-09-14 14:00:25'),
+      type: "Video",
+    ),
+    Media(
+      path: "video/video2.mp4",
+      duration: "14:05",
+      size: 125,
+      lastModified: DateTime.parse('2025-09-15 17:23:25'),
+      type: "Video",
+    ),
+    Media(
+      path: "video/video3.mp4",
+      duration: "03:20",
+      size: 300,
+      lastModified: DateTime.parse('2025-08-14 14:00:25'),
+      type: "Video",
+    ),
   ];
 
   @override
@@ -69,18 +74,12 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
     super.dispose();
   }
 
-  List get filteredAudioList => demoAudioList.where((audio) {
+  List get filteredMediaList => demoMediaList.where((m) {
+    final isType = selectedTabIndex == 0 ? m.type == "Audio" : m.type == "Video";
     final name =
-        audio["path"].split('/').last.split('.').first?.toLowerCase() ?? '';
+        m.path.split('/').last.split('.').first.toLowerCase();
     final query = searchMedia.toLowerCase();
-    return name.contains(query);
-  }).toList();
-
-  List get filteredVideoList => demoVideoList.where((video) {
-    final name =
-        video["path"].split('/').last.split('.').first?.toLowerCase() ?? '';
-    final query = searchMedia.toLowerCase();
-    return name.contains(query);
+    return isType && name.contains(query);
   }).toList();
 
   @override
@@ -154,8 +153,8 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
             const SizedBox(height: 10),
             Expanded(
               child: selectedTabIndex == 0
-                  ? AudioTab(audioList: filteredAudioList)
-                  : VideoTab(videoList: filteredVideoList),
+                  ? AudioTab(audioList: filteredMediaList)
+                  : VideoTab(videoList: filteredMediaList),
             ),
             const SizedBox(height: 10),
             IconButton(
@@ -201,6 +200,7 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -241,22 +241,9 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
 
   void sortToggle() {
     setState(() {
-      if (isSortNewestFirst) {
-        demoAudioList.sort(
-          (a, b) => b["last_modified"].compareTo(a["last_modified"]),
-        );
-        demoVideoList.sort(
-          (a, b) => b["last_modified"].compareTo(a["last_modified"]),
-        );
-      } else {
-        demoAudioList.sort(
-          (a, b) => a["last_modified"].compareTo(b["last_modified"]),
-        );
-        demoVideoList.sort(
-          (a, b) => a["last_modified"].compareTo(b["last_modified"]),
-        );
-      }
-
+      demoMediaList.sort((a, b) => isSortNewestFirst
+          ? a.lastModified.compareTo(b.lastModified)
+          : b.lastModified.compareTo(a.lastModified));
       isSortNewestFirst = !isSortNewestFirst;
       log('$isSortNewestFirst');
     });

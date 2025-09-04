@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:media_download_manager/models/media.dart';
 import 'package:media_download_manager/views/load_media/load_media_screen.dart';
-import 'package:media_download_manager/widgets/media_options_bottom_sheet.dart';
+import 'package:media_download_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,49 +11,55 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List demoAudioList = [
-    {
-      "path": "audio/audio1.mp3",
-      "duration": "05:00",
-      "size": 10,
-      "last_modified": '2025-09-15 14:30:25',
-    },
-    {
-      "path": "audio/audio2.mp3",
-      "duration": "00:50",
-      "size": 15,
-      "last_modified": '2025-09-15 15:30:25',
-    },
-    {
-      "path": "audio/audio3.mp3",
-      "duration": "03:05",
-      "size": 20,
-      "last_modified": '2025-09-15 14:30:25',
-    },
-  ];
-  List demoVideoList = [
-    {
-      "path": "video/video1.mp4",
-      "duration": "05:00",
-      "size": 10,
-      "last_modified": '2025-09-14 14:30:25',
-    },
-    {
-      "path": "video/video2.mp4",
-      "duration": "00:50",
-      "size": 15,
-      "last_modified": '2025-09-15 10:30:25',
-    },
-    {
-      "path": "video/video3.mp4",
-      "duration": "03:05",
-      "size": 20,
-      "last_modified": '2025-09-10 14:30:25',
-    },
+  List<Media> demoMediaList = [
+    Media(
+      path: "audio/audio1.mp3",
+      duration: "05:00",
+      size: 15,
+      lastModified: DateTime.parse('2025-09-15 14:30:25'),
+      type: "Audio",
+    ),
+    Media(
+      path: "audio/audio2.mp3",
+      duration: "00:50",
+      size: 50,
+      lastModified: DateTime.parse('2025-09-15 15:30:25'),
+      type: "Audio",
+    ),
+    Media(
+      path: "audio/audio3.mp3",
+      duration: "03:05",
+      size: 20,
+      lastModified: DateTime.parse('2025-09-15 14:30:25'),
+      type: "Audio",
+    ),
+    Media(
+      path: "video/video1.mp4",
+      duration: "05:00",
+      size: 50,
+      lastModified: DateTime.parse('2025-09-14 14:00:25'),
+      type: "Video",
+    ),
+    Media(
+      path: "video/video2.mp4",
+      duration: "14:05",
+      size: 125,
+      lastModified: DateTime.parse('2025-09-15 17:23:25'),
+      type: "Video",
+    ),
+    Media(
+      path: "video/video3.mp4",
+      duration: "03:20",
+      size: 300,
+      lastModified: DateTime.parse('2025-08-14 14:00:25'),
+      type: "Video",
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final audioList = demoMediaList.where((m) => m.type == "Audio").toList();
+    final videoList = demoMediaList.where((m) => m.type == "Video").toList();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Media Loader'),
@@ -70,8 +77,8 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _homeMediaListTile('Audio', demoAudioList),
-                _homeMediaListTile('Video', demoVideoList),
+                _homeMediaListTile("Audio", audioList),
+                _homeMediaListTile("Video", videoList),
               ],
             ),
           ),
@@ -105,10 +112,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _addMediaToHome() async {
-    Navigator.push(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const LoadMediaScreen()),
     );
+
+    if (result != null && result is Media) {
+      setState(() {
+        demoMediaList.add(result);
+      });
+    }
   }
 
   Widget _homeMediaListTile(String mediaType, List mediaList) {
@@ -116,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          mediaType == "Audio" ? "Audio" : "Video",
+          mediaType,
           style: const TextStyle(fontSize: 15, color: Colors.white60),
         ),
         ListView.builder(
@@ -124,23 +137,24 @@ class _HomeScreenState extends State<HomeScreen> {
           physics: const NeverScrollableScrollPhysics(),
           itemCount: mediaList.length,
           itemBuilder: (context, index) {
+            final media = mediaList[index];
             return ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-              leading: mediaType == "Audio"
+              leading: media.type == "Audio"
                   ? Icon(Icons.play_circle_outline, color: Color(0xFFD48403))
                   : const Icon(Icons.ondemand_video, color: Colors.red),
               title: Text(
-                mediaList[index]['path'].split('/').last.split('.').first,
+                media.path.split('/').last.split('.').first,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(color: Colors.white),
               ),
               subtitle: Text(
-                "${mediaList[index]['size']}Mb | ${mediaList[index]['duration']} | ${mediaList[index]['path'].split('.').last} ",
+                "${media.size}Mb | ${media.duration} | ${media.path.split('.').last} ",
               ),
-              onLongPress: () => showMediaOptionsBottomSheet(context: context),
+              onLongPress: () => showMediaOptionsBottomSheet(context: context, media: media),
               trailing: IconButton(
-                onPressed: () => showMediaOptionsBottomSheet(context: context),
+                onPressed: () => showMediaOptionsBottomSheet(context: context, media: media),
                 icon: const Icon(Icons.more_horiz),
                 color: Colors.white,
               ),

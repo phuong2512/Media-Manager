@@ -13,10 +13,19 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Media Manager',
       theme: ThemeData(
+        dialogTheme: DialogThemeData(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: Color(0xFF19222A),
+          titleTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         listTileTheme: ListTileThemeData(
-            subtitleTextStyle: TextStyle(
-                color: Colors.white30
-            )
+          subtitleTextStyle: TextStyle(color: Colors.white30),
         ),
         scaffoldBackgroundColor: Color(0xFF19222A),
         appBarTheme: AppBarTheme(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:media_download_manager/widgets/media_options_bottom_sheet.dart';
+import 'package:media_download_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
 
 class AudioTab extends StatelessWidget {
   final List audioList;
@@ -22,14 +22,17 @@ class AudioTab extends StatelessWidget {
                     color: Color(0xFFD48403),
                   ),
                   title: Text(
-                    audio['path'].split('/').last.split('.').first,
+                    audio.path.split('/').last.split('.').first,
                     style: TextStyle(color: Colors.white),
                   ),
                   subtitle: Text(
-                    "${audio['size']}Mb | ${audio['duration']} | ${audio['path'].split('.').last} ",
+                    "${audio.size}Mb | ${audio.duration} | ${audio.path.split('.').last} ",
                   ),
-                  onTap: () {},
-                  onLongPress: () => showMediaOptionsBottomSheet(context: context),
+                  onTap: () {
+                    Navigator.pop(context, audio);
+                  },
+                  onLongPress: () =>
+                      showMediaOptionsBottomSheet(context: context, media: audio),
                 );
               },
             ),

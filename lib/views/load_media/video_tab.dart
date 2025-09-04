@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:media_download_manager/widgets/media_options_bottom_sheet.dart';
+import 'package:media_download_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
 
 class VideoTab extends StatelessWidget {
   final List videoList;
@@ -21,9 +21,13 @@ class VideoTab extends StatelessWidget {
                 mainAxisSpacing: 5,
               ),
               itemBuilder: (context, index) {
+                final video = videoList[index];
                 return GestureDetector(
-                  onTap: () {},
-                  onLongPress: () => showMediaOptionsBottomSheet(context: context),
+                  onTap: () {
+                    Navigator.pop(context, video);
+                  },
+                  onLongPress: () =>
+                      showMediaOptionsBottomSheet(context: context, media: video),
                   child: Stack(
                     children: [
                       Container(
@@ -33,7 +37,7 @@ class VideoTab extends StatelessWidget {
                         bottom: 4,
                         right: 4,
                         child: Text(
-                          '${videoList[index]['duration']}',
+                          '${video.duration}',
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),

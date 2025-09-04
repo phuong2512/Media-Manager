@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:media_download_manager/models/media.dart';
+import 'package:media_download_manager/widgets/dialogs/delete_media_dialog.dart';
+import 'package:media_download_manager/widgets/dialogs/rename_media_dialog.dart';
 import 'package:media_download_manager/widgets/option_list_tile.dart';
 
 class MediaOptionsBottomSheet extends StatelessWidget {
-  const MediaOptionsBottomSheet({super.key});
+  final Media media;
+  const MediaOptionsBottomSheet({super.key, required this.media});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +19,7 @@ class MediaOptionsBottomSheet extends StatelessWidget {
             OptionListTile(
               title: 'Rename',
               icon: Icons.mode_edit_outline_outlined,
-              function: () {},
+              function: () => showRenameMediaDialog(context, media),
             ),
             OptionListTile(
               title: 'Share',
@@ -25,7 +29,7 @@ class MediaOptionsBottomSheet extends StatelessWidget {
             OptionListTile(
               title: 'Delete',
               icon: Icons.delete,
-              function: () {},
+              function: () => showDeleteMediaDialog(context, media),
             ),
             ListTile(
               textColor: Colors.white,
@@ -39,7 +43,7 @@ class MediaOptionsBottomSheet extends StatelessWidget {
   }
 }
 
-Future<void> showMediaOptionsBottomSheet({required BuildContext context}) {
+Future<void> showMediaOptionsBottomSheet({required BuildContext context, required Media media}) {
   return showModalBottomSheet(
     useSafeArea: true,
     isScrollControlled: true,
@@ -48,6 +52,6 @@ Future<void> showMediaOptionsBottomSheet({required BuildContext context}) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (context) => MediaOptionsBottomSheet(),
+    builder: (context) => MediaOptionsBottomSheet(media: media,),
   );
 }
