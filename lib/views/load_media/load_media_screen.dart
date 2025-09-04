@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:media_download_manager/views/load_media/audio_tab.dart';
 import 'package:media_download_manager/views/load_media/video_tab.dart';
@@ -17,22 +19,22 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
 
   List demoAudioList = [
     {
-      "name": "Audio 1",
       "path": "audio/audio1.mp3",
       "duration": "05:00",
       "size": 10,
+      "last_modified": '2025-09-15 14:30:25',
     },
     {
-      "name": "Audio 2",
       "path": "audio/audio2.mp3",
-      "duration": "0:50",
+      "duration": "00:50",
       "size": 15,
+      "last_modified": '2025-09-15 15:30:25',
     },
     {
-      "name": "Audio 3",
       "path": "audio/audio3.mp3",
       "duration": "03:05",
       "size": 20,
+      "last_modified": '2025-09-15 14:30:25',
     },
   ];
   List demoVideoList = [
@@ -40,19 +42,21 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
       "path": "video/video1.mp4",
       "duration": "05:00",
       "size": 10,
+      "last_modified": '2025-09-14 14:30:25',
     },
     {
       "path": "video/video2.mp4",
-      "duration": "0:50",
+      "duration": "00:50",
       "size": 15,
+      "last_modified": '2025-09-15 10:30:25',
     },
     {
       "path": "video/video3.mp4",
       "duration": "03:05",
       "size": 20,
+      "last_modified": '2025-09-10 14:30:25',
     },
   ];
-
 
   @override
   void initState() {
@@ -64,6 +68,20 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
     _searchController.dispose();
     super.dispose();
   }
+
+  List get filteredAudioList => demoAudioList.where((audio) {
+    final name =
+        audio["path"].split('/').last.split('.').first?.toLowerCase() ?? '';
+    final query = searchMedia.toLowerCase();
+    return name.contains(query);
+  }).toList();
+
+  List get filteredVideoList => demoVideoList.where((video) {
+    final name =
+        video["path"].split('/').last.split('.').first?.toLowerCase() ?? '';
+    final query = searchMedia.toLowerCase();
+    return name.contains(query);
+  }).toList();
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +152,11 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            Expanded(child: selectedTabIndex == 0 ? AudioTab(audioList: demoAudioList,) : VideoTab(videoList: demoVideoList,)),
+            Expanded(
+              child: selectedTabIndex == 0
+                  ? AudioTab(audioList: filteredAudioList)
+                  : VideoTab(videoList: filteredVideoList),
+            ),
             const SizedBox(height: 10),
             IconButton(
               onPressed: () => _showSortOptionsDialog(context),
@@ -192,19 +214,21 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
               const SizedBox(height: 10),
               ListTile(
                 title: const Text('Newest to Oldest'),
-                trailing: isSortNewestFirst
+                trailing: isSortNewestFirst == true
                     ? const Icon(Icons.check, color: Colors.cyan, size: 45)
                     : null,
                 onTap: () {
+                  isSortNewestFirst == false ? sortToggle() : null;
                   Navigator.pop(context);
                 },
               ),
               ListTile(
                 title: const Text('Oldest to Newest'),
-                trailing: !isSortNewestFirst
+                trailing: isSortNewestFirst == false
                     ? const Icon(Icons.check, color: Colors.cyan, size: 45)
                     : null,
                 onTap: () {
+                  isSortNewestFirst == true ? sortToggle() : null;
                   Navigator.pop(context);
                 },
               ),
@@ -213,5 +237,28 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
         );
       },
     );
+  }
+
+  void sortToggle() {
+    setState(() {
+      if (isSortNewestFirst) {
+        demoAudioList.sort(
+          (a, b) => b["last_modified"].compareTo(a["last_modified"]),
+        );
+        demoVideoList.sort(
+          (a, b) => b["last_modified"].compareTo(a["last_modified"]),
+        );
+      } else {
+        demoAudioList.sort(
+          (a, b) => a["last_modified"].compareTo(b["last_modified"]),
+        );
+        demoVideoList.sort(
+          (a, b) => a["last_modified"].compareTo(b["last_modified"]),
+        );
+      }
+
+      isSortNewestFirst = !isSortNewestFirst;
+      log('$isSortNewestFirst');
+    });
   }
 }

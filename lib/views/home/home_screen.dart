@@ -14,35 +14,41 @@ class _HomeScreenState extends State<HomeScreen> {
   List demoAudioList = [
     {
       "path": "audio/audio1.mp3",
-      "duraion": "05:00",
+      "duration": "05:00",
       "size": 10,
+      "last_modified": '2025-09-15 14:30:25',
     },
     {
       "path": "audio/audio2.mp3",
-      "duraion": "0:50",
+      "duration": "00:50",
       "size": 15,
+      "last_modified": '2025-09-15 15:30:25',
     },
     {
       "path": "audio/audio3.mp3",
-      "duraion": "03:05",
+      "duration": "03:05",
       "size": 20,
+      "last_modified": '2025-09-15 14:30:25',
     },
   ];
   List demoVideoList = [
     {
       "path": "video/video1.mp4",
-      "duraion": "05:00",
+      "duration": "05:00",
       "size": 10,
+      "last_modified": '2025-09-14 14:30:25',
     },
     {
       "path": "video/video2.mp4",
-      "duraion": "0:50",
+      "duration": "00:50",
       "size": 15,
+      "last_modified": '2025-09-15 10:30:25',
     },
     {
       "path": "video/video3.mp4",
-      "duraion": "03:05",
+      "duration": "03:05",
       "size": 20,
+      "last_modified": '2025-09-10 14:30:25',
     },
   ];
 
@@ -65,8 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                HomeListTile(mediaType: 'Audio', mediaList: demoAudioList,),
-                HomeListTile(mediaType: 'Video', mediaList: demoVideoList,),
+                HomeListTile(mediaType: 'Audio', mediaList: demoAudioList),
+                HomeListTile(mediaType: 'Video', mediaList: demoVideoList),
               ],
             ),
           ),
@@ -100,7 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _addMediaToHome() async {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const LoadMediaScreen()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const LoadMediaScreen()),
+    );
   }
-
 }

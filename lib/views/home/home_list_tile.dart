@@ -36,7 +36,7 @@ class HomeListTile extends StatelessWidget {
                 style: const TextStyle(color: Colors.white),
               ),
               subtitle: Text(
-                "${mediaList[index]['size']}Mb | ${mediaList[index]['duraion']} | ${mediaList[index]['path'].split('.').last} ",
+                "${mediaList[index]['size']}Mb | ${mediaList[index]['duration']} | ${mediaList[index]['path'].split('.').last} ",
               ),
               onLongPress: () {},
               trailing: IconButton(
