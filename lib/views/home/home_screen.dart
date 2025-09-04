@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:media_download_manager/views/home/home_list_tile.dart';
+import 'package:media_download_manager/views/load_media/load_media_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,19 +13,16 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List demoAudioList = [
     {
-      "name": "Audio 1",
       "path": "audio/audio1.mp3",
       "duraion": "05:00",
       "size": 10,
     },
     {
-      "name": "Audio 2",
       "path": "audio/audio2.mp3",
       "duraion": "0:50",
       "size": 15,
     },
     {
-      "name": "Audio 3",
       "path": "audio/audio3.mp3",
       "duraion": "03:05",
       "size": 20,
@@ -32,19 +30,16 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
   List demoVideoList = [
     {
-      "name": "Video 1",
       "path": "video/video1.mp4",
       "duraion": "05:00",
       "size": 10,
     },
     {
-      "name": "Video 2",
       "path": "video/video2.mp4",
       "duraion": "0:50",
       "size": 15,
     },
     {
-      "name": "Video 3",
       "path": "video/video3.mp4",
       "duraion": "03:05",
       "size": 20,
@@ -104,6 +99,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _addMediaToHome() async {}
+  void _addMediaToHome() async {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => const LoadMediaScreen()));
+  }
 
 }

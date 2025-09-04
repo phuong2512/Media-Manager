@@ -30,7 +30,7 @@ class HomeListTile extends StatelessWidget {
                   ? Icon(Icons.play_circle_outline, color: Colors.amber)
                   : const Icon(Icons.ondemand_video, color: Colors.red),
               title: Text(
-                mediaList[index]['name'],
+                mediaList[index]['path'].split('/').last.split('.').first,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(color: Colors.white),
