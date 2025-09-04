@@ -68,8 +68,7 @@ class RenameMediaDialog extends StatelessWidget {
                   if (newName.isNotEmpty) {
                     Navigator.pop(context, newName);
                   }
-                }
-                ,
+                },
                 style: TextButton.styleFrom(
                   backgroundColor: Colors.cyan,
                   foregroundColor: Colors.white,

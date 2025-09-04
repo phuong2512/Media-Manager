@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 class OptionListTile extends StatelessWidget {
   final String title;
   final IconData icon;
-  final VoidCallback function;
+  final VoidCallback onTap;
 
   const OptionListTile({
     required this.title,
     required this.icon,
-    required this.function,
+    required this.onTap,
     super.key,
   });
 
@@ -19,10 +19,7 @@ class OptionListTile extends StatelessWidget {
       iconColor: const Color(0XFF90C5E0),
       title: Text(title),
       leading: Icon(icon),
-      onTap: () {
-        Navigator.pop(context);
-        function();
-      },
+      onTap: onTap,
     );
   }
 }

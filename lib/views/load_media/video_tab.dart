@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:media_download_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
+import 'package:media_download_manager/models/media.dart';
 
 class VideoTab extends StatelessWidget {
   final List videoList;
+  final Function(Media) onMediaOptionsPressed;
 
-  const VideoTab({super.key, required this.videoList});
+  const VideoTab({
+    super.key,
+    required this.videoList,
+    required this.onMediaOptionsPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,18 +31,20 @@ class VideoTab extends StatelessWidget {
                   onTap: () {
                     Navigator.pop(context, video);
                   },
-                  onLongPress: () =>
-                      showMediaOptionsBottomSheet(context: context, media: video),
+                  onLongPress: () => onMediaOptionsPressed(video),
                   child: Stack(
+                    fit: StackFit.expand,
                     children: [
                       Container(
-                        decoration: BoxDecoration(color: Color(0xFF2F3D4C)),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF2F3D4C),
+                        ),
                       ),
                       Positioned(
                         bottom: 4,
                         right: 4,
                         child: Text(
-                          '${video.duration}',
+                          video.duration,
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),

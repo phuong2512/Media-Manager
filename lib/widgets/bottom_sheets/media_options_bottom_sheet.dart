@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:media_download_manager/models/media.dart';
-import 'package:media_download_manager/widgets/dialogs/delete_media_dialog.dart';
-import 'package:media_download_manager/widgets/dialogs/rename_media_dialog.dart';
 import 'package:media_download_manager/widgets/option_list_tile.dart';
 
 class MediaOptionsBottomSheet extends StatelessWidget {
-  final Media media;
-  const MediaOptionsBottomSheet({super.key, required this.media});
+  const MediaOptionsBottomSheet({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,17 +15,17 @@ class MediaOptionsBottomSheet extends StatelessWidget {
             OptionListTile(
               title: 'Rename',
               icon: Icons.mode_edit_outline_outlined,
-              function: () => showRenameMediaDialog(context, media),
+              onTap: () => Navigator.pop(context, 'rename'),
             ),
             OptionListTile(
               title: 'Share',
               icon: Icons.share_outlined,
-              function: () {},
+              onTap: () => Navigator.pop(context),
             ),
             OptionListTile(
               title: 'Delete',
               icon: Icons.delete,
-              function: () => showDeleteMediaDialog(context, media),
+              onTap: () => Navigator.pop(context, 'delete'),
             ),
             ListTile(
               textColor: Colors.white,
@@ -43,8 +39,8 @@ class MediaOptionsBottomSheet extends StatelessWidget {
   }
 }
 
-Future<void> showMediaOptionsBottomSheet({required BuildContext context, required Media media}) {
-  return showModalBottomSheet(
+Future<String?> showMediaOptionsBottomSheet({required BuildContext context}) {
+  return showModalBottomSheet<String>(
     useSafeArea: true,
     isScrollControlled: true,
     context: context,
@@ -52,6 +48,6 @@ Future<void> showMediaOptionsBottomSheet({required BuildContext context, require
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (context) => MediaOptionsBottomSheet(media: media,),
+    builder: (context) => const MediaOptionsBottomSheet(),
   );
 }

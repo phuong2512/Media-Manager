@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:media_download_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
+import 'package:media_download_manager/models/media.dart';
 
 class AudioTab extends StatelessWidget {
   final List audioList;
+  final Function(Media) onMediaOptionsPressed;
 
-  const AudioTab({super.key, required this.audioList});
+  const AudioTab({
+    super.key,
+    required this.audioList,
+    required this.onMediaOptionsPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,13 +22,13 @@ class AudioTab extends StatelessWidget {
               itemBuilder: (context, index) {
                 final audio = audioList[index];
                 return ListTile(
-                  leading: Icon(
+                  leading: const Icon(
                     Icons.play_circle_outline,
                     color: Color(0xFFD48403),
                   ),
                   title: Text(
                     audio.path.split('/').last.split('.').first,
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
                   subtitle: Text(
                     "${audio.size}Mb | ${audio.duration} | ${audio.path.split('.').last} ",
@@ -31,8 +36,7 @@ class AudioTab extends StatelessWidget {
                   onTap: () {
                     Navigator.pop(context, audio);
                   },
-                  onLongPress: () =>
-                      showMediaOptionsBottomSheet(context: context, media: audio),
+                  onLongPress: () => onMediaOptionsPressed(audio),
                 );
               },
             ),

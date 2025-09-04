@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:media_download_manager/controllers/media_controller.dart';
+import 'package:provider/provider.dart';
 import 'package:media_download_manager/views/home/home_screen.dart';
 
 void main() {
@@ -10,36 +12,39 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Media Manager',
-      theme: ThemeData(
-        dialogTheme: DialogThemeData(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+    return ChangeNotifierProvider(
+      create: (_) => MediaController(),
+      child: MaterialApp(
+        title: 'Media Manager',
+        theme: ThemeData(
+          dialogTheme: DialogThemeData(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            backgroundColor: Color(0xFF19222A),
+            titleTextStyle: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          backgroundColor: Color(0xFF19222A),
-          titleTextStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+          listTileTheme: ListTileThemeData(
+            subtitleTextStyle: TextStyle(color: Colors.white30),
+          ),
+          scaffoldBackgroundColor: Color(0xFF19222A),
+          appBarTheme: AppBarTheme(
+            centerTitle: true,
+            backgroundColor: Color(0xFF19222A),
+            titleTextStyle: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Colors.white,
+            ),
           ),
         ),
-        listTileTheme: ListTileThemeData(
-          subtitleTextStyle: TextStyle(color: Colors.white30),
-        ),
-        scaffoldBackgroundColor: Color(0xFF19222A),
-        appBarTheme: AppBarTheme(
-          centerTitle: true,
-          backgroundColor: Color(0xFF19222A),
-          titleTextStyle: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: Colors.white,
-          ),
-        ),
+        debugShowCheckedModeBanner: false,
+        home: const HomeScreen(),
       ),
-      debugShowCheckedModeBanner: false,
-      home: const HomeScreen(),
     );
   }
 }

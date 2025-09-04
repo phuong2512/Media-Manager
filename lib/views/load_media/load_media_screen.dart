@@ -1,9 +1,13 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
+import 'package:media_download_manager/controllers/media_controller.dart';
+import 'package:provider/provider.dart';
 import 'package:media_download_manager/models/media.dart';
 import 'package:media_download_manager/views/load_media/audio_tab.dart';
 import 'package:media_download_manager/views/load_media/video_tab.dart';
+import 'package:media_download_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
+import 'package:media_download_manager/widgets/dialogs/delete_media_dialog.dart';
+import 'package:media_download_manager/widgets/dialogs/rename_media_dialog.dart';
 
 class LoadMediaScreen extends StatefulWidget {
   const LoadMediaScreen({super.key});
@@ -18,51 +22,6 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
   bool isSortNewestFirst = true;
   final TextEditingController _searchController = TextEditingController();
 
-  List<Media> demoMediaList = [
-    Media(
-      path: "audio/audio1.mp3",
-      duration: "05:00",
-      size: 15,
-      lastModified: DateTime.parse('2025-09-15 14:30:25'),
-      type: "Audio",
-    ),
-    Media(
-      path: "audio/audio2.mp3",
-      duration: "00:50",
-      size: 50,
-      lastModified: DateTime.parse('2025-09-15 15:30:25'),
-      type: "Audio",
-    ),
-    Media(
-      path: "audio/audio3.mp3",
-      duration: "03:05",
-      size: 20,
-      lastModified: DateTime.parse('2025-09-15 14:30:25'),
-      type: "Audio",
-    ),
-    Media(
-      path: "video/video1.mp4",
-      duration: "05:00",
-      size: 50,
-      lastModified: DateTime.parse('2025-09-14 14:00:25'),
-      type: "Video",
-    ),
-    Media(
-      path: "video/video2.mp4",
-      duration: "14:05",
-      size: 125,
-      lastModified: DateTime.parse('2025-09-15 17:23:25'),
-      type: "Video",
-    ),
-    Media(
-      path: "video/video3.mp4",
-      duration: "03:20",
-      size: 300,
-      lastModified: DateTime.parse('2025-08-14 14:00:25'),
-      type: "Video",
-    ),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -74,13 +33,35 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
     super.dispose();
   }
 
-  List get filteredMediaList => demoMediaList.where((m) {
-    final isType = selectedTabIndex == 0 ? m.type == "Audio" : m.type == "Video";
-    final name =
-        m.path.split('/').last.split('.').first.toLowerCase();
-    final query = searchMedia.toLowerCase();
-    return isType && name.contains(query);
-  }).toList();
+  List get filteredMediaList =>
+      context.watch<MediaController>().libraryMediaList.where((m) {
+        final isType = selectedTabIndex == 0
+            ? m.type == "Audio"
+            : m.type == "Video";
+        final name = m.path.split('/').last.split('.').first.toLowerCase();
+        final query = searchMedia.toLowerCase();
+        return isType && name.contains(query);
+      }).toList();
+
+  void _handleMediaOptions(Media media) async {
+    final action = await showMediaOptionsBottomSheet(context: context);
+    if (!mounted) return;
+    if (action == 'delete') {
+      final confirmed = await showDeleteMediaDialog(context, media);
+      if (!mounted) return;
+      if (confirmed == true) {
+        context.read<MediaController>().deleteByPath(media.path);
+        setState(() {});
+      }
+    } else if (action == 'rename') {
+      final newName = await showRenameMediaDialog(context, media);
+      if (!mounted) return;
+      if (newName != null && newName.isNotEmpty) {
+        context.read<MediaController>().rename(media, newName);
+        setState(() {});
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,8 +134,14 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
             const SizedBox(height: 10),
             Expanded(
               child: selectedTabIndex == 0
-                  ? AudioTab(audioList: filteredMediaList)
-                  : VideoTab(videoList: filteredMediaList),
+                  ? AudioTab(
+                      audioList: filteredMediaList,
+                      onMediaOptionsPressed: _handleMediaOptions,
+                    )
+                  : VideoTab(
+                      videoList: filteredMediaList,
+                      onMediaOptionsPressed: _handleMediaOptions,
+                    ),
             ),
             const SizedBox(height: 10),
             IconButton(
@@ -240,11 +227,9 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
   }
 
   void sortToggle() {
+    context.read<MediaController>().sortToggleByLastModified();
     setState(() {
-      demoMediaList.sort((a, b) => isSortNewestFirst
-          ? a.lastModified.compareTo(b.lastModified)
-          : b.lastModified.compareTo(a.lastModified));
-      isSortNewestFirst = !isSortNewestFirst;
+      isSortNewestFirst = context.read<MediaController>().isSortNewestFirst;
       log('$isSortNewestFirst');
     });
   }
