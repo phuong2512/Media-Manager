@@ -1,7 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:media_download_manager/views/home/home_list_tile.dart';
 import 'package:media_download_manager/views/load_media/load_media_screen.dart';
+import 'package:media_download_manager/widgets/media_options_bottom_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -71,8 +70,8 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                HomeListTile(mediaType: 'Audio', mediaList: demoAudioList),
-                HomeListTile(mediaType: 'Video', mediaList: demoVideoList),
+                _homeMediaListTile('Audio', demoAudioList),
+                _homeMediaListTile('Video', demoVideoList),
               ],
             ),
           ),
@@ -109,6 +108,46 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const LoadMediaScreen()),
+    );
+  }
+
+  Widget _homeMediaListTile(String mediaType, List mediaList) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          mediaType == "Audio" ? "Audio" : "Video",
+          style: const TextStyle(fontSize: 15, color: Colors.white60),
+        ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: mediaList.length,
+          itemBuilder: (context, index) {
+            return ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+              leading: mediaType == "Audio"
+                  ? Icon(Icons.play_circle_outline, color: Color(0xFFD48403))
+                  : const Icon(Icons.ondemand_video, color: Colors.red),
+              title: Text(
+                mediaList[index]['path'].split('/').last.split('.').first,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Colors.white),
+              ),
+              subtitle: Text(
+                "${mediaList[index]['size']}Mb | ${mediaList[index]['duration']} | ${mediaList[index]['path'].split('.').last} ",
+              ),
+              onLongPress: () => showMediaOptionsBottomSheet(context: context),
+              trailing: IconButton(
+                onPressed: () => showMediaOptionsBottomSheet(context: context),
+                icon: const Icon(Icons.more_horiz),
+                color: Colors.white,
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }
