@@ -19,8 +19,6 @@ class LoadMediaScreen extends StatefulWidget {
 class _LoadMediaScreenState extends State<LoadMediaScreen> {
   int selectedTabIndex = 0;
   String searchMedia = '';
-  bool isSortNewestFirst = true;
-  bool isLoading = true;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -30,20 +28,11 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
   }
 
   Future<void> _loadMediaLibrary() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      await context.read<MediaController>().scanLibrary();
-    } catch (e) {
-      debugPrint('Error loading media library: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
+    final controller = context.read<MediaController>();
+    if (!controller.isLibraryScanned && !controller.isScanning) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await controller.scanLibrary();
+      });
     }
   }
 
@@ -85,6 +74,9 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<MediaController>();
+    final isLoading = controller.isScanning;
+
     return isLoading
         ? Scaffold(
             body: Center(
@@ -216,6 +208,8 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
   }
 
   void _showSortOptionsDialog(BuildContext context) {
+    final controller = context.read<MediaController>();
+
     showDialog(
       context: context,
       builder: (context) {
@@ -234,21 +228,25 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
               const SizedBox(height: 10),
               ListTile(
                 title: const Text('Từ mới đến cũ'),
-                trailing: isSortNewestFirst == true
+                trailing: controller.isSortNewestFirst
                     ? const Icon(Icons.check, color: Colors.cyan, size: 45)
                     : null,
                 onTap: () {
-                  isSortNewestFirst == false ? sortToggle() : null;
+                  if (!controller.isSortNewestFirst) {
+                    controller.sortToggleByLastModified();
+                  }
                   Navigator.pop(context);
                 },
               ),
               ListTile(
                 title: const Text('Từ cũ đến mới'),
-                trailing: isSortNewestFirst == false
+                trailing: !controller.isSortNewestFirst
                     ? const Icon(Icons.check, color: Colors.cyan, size: 45)
                     : null,
                 onTap: () {
-                  isSortNewestFirst == true ? sortToggle() : null;
+                  if (controller.isSortNewestFirst) {
+                    controller.sortToggleByLastModified();
+                  }
                   Navigator.pop(context);
                 },
               ),
@@ -257,13 +255,5 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
         );
       },
     );
-  }
-
-  void sortToggle() {
-    context.read<MediaController>().sortToggleByLastModified();
-    setState(() {
-      isSortNewestFirst = context.read<MediaController>().isSortNewestFirst;
-      log('$isSortNewestFirst');
-    });
   }
 }

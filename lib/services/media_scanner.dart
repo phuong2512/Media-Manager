@@ -3,6 +3,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:media_manager/models/media.dart';
+import 'package:media_manager/services/duration_service.dart';
 
 class MediaScannerService {
   static const _audioExtension = [
@@ -22,6 +23,8 @@ class MediaScannerService {
     '.3gp',
   ];
 
+  final DurationService _durationService = DurationService.instance;
+
   Future<List<Media>> scanAll() async {
     final hasPermission = await _requestStoragePermissions();
     if (!hasPermission) {
@@ -37,22 +40,31 @@ class MediaScannerService {
     }
 
     final items = <Media>[];
-    for (final f in files) {
+
+    final futures = files.map((f) async {
       final stat = await f.stat();
       final ext = p.extension(f.path).toLowerCase();
       final isAudio = _audioExtension.contains(ext);
       final isVideo = _videoExtension.contains(ext);
-      if (!isAudio && !isVideo) continue;
-      items.add(
-        Media(
-          path: f.path,
-          duration: '00:00',
-          size: stat.size,
-          lastModified: stat.modified,
-          type: isAudio ? 'Audio' : 'Video',
-        ),
+      if (!isAudio && !isVideo) return null;
+
+      final duration = await _durationService.getMediaDuration(
+        f.path,
+        isAudio ? 'Audio' : 'Video',
       );
-    }
+
+      return Media(
+        path: f.path,
+        duration: duration,
+        size: stat.size,
+        lastModified: stat.modified,
+        type: isAudio ? 'Audio' : 'Video',
+      );
+    });
+
+    final results = await Future.wait(futures);
+    items.addAll(results.where((item) => item != null).cast<Media>());
+
     return items;
   }
 

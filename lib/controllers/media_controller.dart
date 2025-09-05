@@ -8,11 +8,14 @@ class MediaController extends ChangeNotifier {
   MediaController() {
     _libraryMediaList = [];
     _homeMediaList = [];
+    _isLibraryScanned = false;
   }
 
   late List<Media> _libraryMediaList;
   late List<Media> _homeMediaList;
   bool _isSortNewestFirst = true;
+  bool _isLibraryScanned = false;
+  bool _isScanning = false;
   final MediaScannerService _scanner = MediaScannerService();
 
   List<Media> get libraryMediaList => _libraryMediaList;
@@ -20,6 +23,10 @@ class MediaController extends ChangeNotifier {
   List<Media> get homeMediaList => _homeMediaList;
 
   bool get isSortNewestFirst => _isSortNewestFirst;
+
+  bool get isLibraryScanned => _isLibraryScanned;
+
+  bool get isScanning => _isScanning;
 
   List<Media> get audioList =>
       _homeMediaList.where((media) => media.type == "Audio").toList();
@@ -127,9 +134,32 @@ class MediaController extends ChangeNotifier {
   }
 
   Future<void> scanLibrary() async {
-    final scanned = await _scanner.scanAll();
-    _libraryMediaList = scanned;
+    // Nếu đã scan rồi và đang scan thì không scan lại
+    if (_isLibraryScanned || _isScanning) {
+      return;
+    }
+
+    _isScanning = true;
     notifyListeners();
+
+    try {
+      final scanned = await _scanner.scanAll();
+      _libraryMediaList = scanned;
+      _isLibraryScanned = true;
+    } catch (e) {
+      print('Error scanning library: $e');
+    } finally {
+      _isScanning = false;
+      notifyListeners();
+    }
+  }
+
+  /// Force refresh library (xóa cache và scan lại)
+  Future<void> refreshLibrary() async {
+    _isLibraryScanned = false;
+    _libraryMediaList.clear();
+    notifyListeners();
+    await scanLibrary();
   }
 
   Future<bool> _checkStoragePermission() async {
