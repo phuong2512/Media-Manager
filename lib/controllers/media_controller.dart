@@ -151,14 +151,11 @@ class MediaController extends ChangeNotifier {
   }
 
   Future<void> scanLibrary() async {
-    // Nếu đã scan rồi và đang scan thì không scan lại
     if (_isLibraryScanned || _isScanning) {
       return;
     }
-
     _isScanning = true;
     notifyListeners();
-
     try {
       final scanned = await _scanner.scanAll();
       _libraryMediaList = scanned;
@@ -171,26 +168,14 @@ class MediaController extends ChangeNotifier {
     }
   }
 
-  /// Force refresh library (xóa cache và scan lại)
-  Future<void> refreshLibrary() async {
-    _isLibraryScanned = false;
-    _libraryMediaList.clear();
-    notifyListeners();
-    await scanLibrary();
-  }
-
   Future<bool> _checkStoragePermission() async {
     if (await Permission.manageExternalStorage.isGranted) {
       return true;
     }
-
-    // Request permission if not granted
     final status = await Permission.manageExternalStorage.request();
     if (status.isGranted) {
       return true;
     }
-
-    // Fallback to regular storage permission
     final storageStatus = await Permission.storage.request();
     return storageStatus.isGranted;
   }
