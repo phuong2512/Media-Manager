@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:media_download_manager/models/media.dart';
+import 'package:media_manager/models/media.dart';
 
 class VideoTab extends StatelessWidget {
   final List videoList;

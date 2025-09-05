@@ -1,58 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:media_download_manager/models/media.dart';
+import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:media_manager/models/media.dart';
+import 'package:media_manager/services/media_scanner.dart';
 
 class MediaController extends ChangeNotifier {
   MediaController() {
-    _libraryMediaList = [
-      Media(
-        path: "audio/audio1.mp3",
-        duration: "05:00",
-        size: 15,
-        lastModified: DateTime.parse('2025-09-15 14:30:25'),
-        type: "Audio",
-      ),
-      Media(
-        path: "audio/audio2.mp3",
-        duration: "00:50",
-        size: 50,
-        lastModified: DateTime.parse('2025-09-15 15:30:25'),
-        type: "Audio",
-      ),
-      Media(
-        path: "audio/audio3.mp3",
-        duration: "03:05",
-        size: 20,
-        lastModified: DateTime.parse('2025-09-15 14:30:25'),
-        type: "Audio",
-      ),
-      Media(
-        path: "video/video1.mp4",
-        duration: "05:00",
-        size: 50,
-        lastModified: DateTime.parse('2025-09-14 14:00:25'),
-        type: "Video",
-      ),
-      Media(
-        path: "video/video2.mp4",
-        duration: "14:05",
-        size: 125,
-        lastModified: DateTime.parse('2025-09-15 17:23:25'),
-        type: "Video",
-      ),
-      Media(
-        path: "video/video3.mp4",
-        duration: "03:20",
-        size: 300,
-        lastModified: DateTime.parse('2025-08-14 14:00:25'),
-        type: "Video",
-      ),
-    ];
+    _libraryMediaList = [];
     _homeMediaList = [];
   }
 
   late List<Media> _libraryMediaList;
   late List<Media> _homeMediaList;
   bool _isSortNewestFirst = true;
+  final MediaScannerService _scanner = MediaScannerService();
 
   List<Media> get libraryMediaList => _libraryMediaList;
 
@@ -83,34 +44,76 @@ class MediaController extends ChangeNotifier {
     }
   }
 
-  void deleteByPath(String path) {
-    _libraryMediaList.removeWhere((m) => m.path == path);
-    _homeMediaList.removeWhere((m) => m.path == path);
-    notifyListeners();
+  Future<bool> deleteByPath(String path) async {
+    try {
+      final hasPermission = await _checkStoragePermission();
+      if (!hasPermission) {
+        return false;
+      }
+
+      final file = File(path);
+      final exists = await file.exists();
+
+      if (exists) {
+        await file.delete();
+      } else {}
+      _libraryMediaList.removeWhere((m) => m.path == path);
+      _homeMediaList.removeWhere((m) => m.path == path);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
-  void rename(Media target, String newName) {
+  Future<bool> rename(Media target, String newName) async {
     final index = _libraryMediaList.indexWhere((m) => m.path == target.path);
-    if (index == -1) return;
-    final oldMedia = _libraryMediaList[index];
-    final pathParts = oldMedia.path.split('/');
-    final extension = pathParts.last.split('.').last;
-    pathParts[pathParts.length - 1] = '$newName.$extension';
-    final newPath = pathParts.join('/');
-    final updated = Media(
-      path: newPath,
-      duration: oldMedia.duration,
-      size: oldMedia.size,
-      lastModified: oldMedia.lastModified,
-      type: oldMedia.type,
-    );
-    _libraryMediaList[index] = updated;
-
-    final homeIndex = _homeMediaList.indexWhere((m) => m.path == target.path);
-    if (homeIndex != -1) {
-      _homeMediaList[homeIndex] = updated;
+    if (index == -1) {
+      return false;
     }
-    notifyListeners();
+    final oldMedia = _libraryMediaList[index];
+    try {
+      final hasPermission = await _checkStoragePermission();
+      if (!hasPermission) {
+        return false;
+      }
+
+      final oldFile = File(oldMedia.path);
+      final directoryPath = oldFile.parent.path;
+      final extension = oldMedia.path.split('.').last;
+      final newPath = '$directoryPath/$newName.$extension';
+
+      final exists = await oldFile.exists();
+      if (exists) {
+        await oldFile.rename(newPath);
+      }
+
+      FileStat? updatedStat;
+      try {
+        updatedStat = await File(newPath).stat();
+      } catch (e) {
+        updatedStat = await oldFile.stat();
+      }
+
+      final updated = Media(
+        path: newPath,
+        duration: oldMedia.duration,
+        size: updatedStat.size,
+        lastModified: updatedStat.modified,
+        type: oldMedia.type,
+      );
+
+      _libraryMediaList[index] = updated;
+      final homeIndex = _homeMediaList.indexWhere((m) => m.path == target.path);
+      if (homeIndex != -1) {
+        _homeMediaList[homeIndex] = updated;
+      }
+      notifyListeners();
+
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   void sortToggleByLastModified() {
@@ -121,5 +124,27 @@ class MediaController extends ChangeNotifier {
     );
     _isSortNewestFirst = !_isSortNewestFirst;
     notifyListeners();
+  }
+
+  Future<void> scanLibrary() async {
+    final scanned = await _scanner.scanAll();
+    _libraryMediaList = scanned;
+    notifyListeners();
+  }
+
+  Future<bool> _checkStoragePermission() async {
+    if (await Permission.manageExternalStorage.isGranted) {
+      return true;
+    }
+
+    // Request permission if not granted
+    final status = await Permission.manageExternalStorage.request();
+    if (status.isGranted) {
+      return true;
+    }
+
+    // Fallback to regular storage permission
+    final storageStatus = await Permission.storage.request();
+    return storageStatus.isGranted;
   }
 }

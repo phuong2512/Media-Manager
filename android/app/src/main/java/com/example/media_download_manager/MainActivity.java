@@ -1,4 +1,4 @@
-package com.example.media_download_manager;
+package com.example.media_manager;
 
 import io.flutter.embedding.android.FlutterActivity;
 

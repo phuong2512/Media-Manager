@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:media_download_manager/widgets/option_list_tile.dart';
+import 'package:media_manager/widgets/option_list_tile.dart';
 
 class MediaOptionsBottomSheet extends StatelessWidget {
   const MediaOptionsBottomSheet({super.key});

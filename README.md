@@ -1,4 +1,4 @@
-# media_download_manager
+# media_manager
 
 A new Flutter project.
 

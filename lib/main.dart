@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:media_download_manager/controllers/media_controller.dart';
+import 'package:media_manager/controllers/media_controller.dart';
 import 'package:provider/provider.dart';
-import 'package:media_download_manager/views/home/home_screen.dart';
+import 'package:media_manager/views/home/home_screen.dart';
 
 void main() {
   runApp(const MyApp());

@@ -1,6 +1,6 @@
 {
-    "name": "media_download_manager",
-    "short_name": "media_download_manager",
+    "name": "media_manager",
+    "short_name": "media_manager",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
