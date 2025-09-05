@@ -69,6 +69,8 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
         context.read<MediaController>().rename(media, newName);
         setState(() {});
       }
+    } else if (action == 'share'){
+      context.read<MediaController>().share(media.path);
     }
   }
 

@@ -20,7 +20,7 @@ class MediaOptionsBottomSheet extends StatelessWidget {
             OptionListTile(
               title: 'Share',
               icon: Icons.share_outlined,
-              onTap: () => Navigator.pop(context),
+              onTap: () => Navigator.pop(context, 'share'),
             ),
             OptionListTile(
               title: 'Delete',

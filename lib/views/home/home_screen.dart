@@ -100,6 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (newName != null && newName.isNotEmpty) {
         await context.read<MediaController>().rename(media, newName);
       }
+    } else if (action == 'share') {
+      context.read<MediaController>().share(media.path);
     }
   }
 

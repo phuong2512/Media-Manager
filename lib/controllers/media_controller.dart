@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:media_manager/models/media.dart';
 import 'package:media_manager/services/media_scanner.dart';
+import 'package:share_plus/share_plus.dart';
 
 class MediaController extends ChangeNotifier {
   MediaController() {
@@ -117,6 +118,22 @@ class MediaController extends ChangeNotifier {
       }
       notifyListeners();
 
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> share(String path) async {
+    try{
+      final file = File(path);
+      final exists = await file.exists();
+
+      if (exists) {
+        final params = ShareParams(files: [XFile(file.path)]);
+        await SharePlus.instance.share(params);
+      }
+      notifyListeners();
       return true;
     } catch (e) {
       return false;
