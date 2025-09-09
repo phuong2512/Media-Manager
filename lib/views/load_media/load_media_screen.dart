@@ -151,11 +151,17 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
                   Expanded(
                     child: selectedTabIndex == 0
                         ? AudioTab(
-                            audioList: controller.filteredLibrary(type: "Audio", query: _searchController.text),
+                            audioList: controller.filteredLibrary(
+                              type: "Audio",
+                              query: _searchController.text,
+                            ),
                             onMediaOptionsPressed: _handleMediaOptions,
                           )
                         : VideoTab(
-                            videoList: controller.filteredLibrary(type: "Video", query: _searchController.text),
+                            videoList: controller.filteredLibrary(
+                              type: "Video",
+                              query: _searchController.text,
+                            ),
                             onMediaOptionsPressed: _handleMediaOptions,
                           ),
                   ),
@@ -209,19 +215,27 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 10),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
                 'Sắp xếp theo thời gian',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               ListTile(
-                title: const Text('Từ mới đến cũ'),
-                trailing: controller.isSortNewestFirst
-                    ? const Icon(Icons.check, color: Colors.cyan, size: 45)
-                    : null,
+                title: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25),
+                  child: Row(
+                    children: [
+                      const Text('Từ mới đến cũ', style: TextStyle(fontSize: 19)),
+                      SizedBox(width: 10),
+                      if (controller.isSortNewestFirst)
+                        const Icon(Icons.check, color: Colors.cyan, size: 45),
+                    ],
+                  ),
+                ),
                 onTap: () {
                   if (!controller.isSortNewestFirst) {
                     controller.sortToggleByLastModified();
@@ -230,10 +244,20 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
                 },
               ),
               ListTile(
-                title: const Text('Từ cũ đến mới'),
-                trailing: !controller.isSortNewestFirst
-                    ? const Icon(Icons.check, color: Colors.cyan, size: 45)
-                    : null,
+                title: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'Từ cũ đến mới',
+                        style: TextStyle(fontSize: 19),
+                      ),
+                      SizedBox(width: 10),
+                      if (!controller.isSortNewestFirst)
+                        const Icon(Icons.check, color: Colors.cyan, size: 45),
+                    ],
+                  ),
+                ),
                 onTap: () {
                   if (controller.isSortNewestFirst) {
                     controller.sortToggleByLastModified();
