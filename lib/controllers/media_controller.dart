@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
@@ -161,7 +163,7 @@ class MediaController extends ChangeNotifier {
       _libraryMediaList = scanned;
       _isLibraryScanned = true;
     } catch (e) {
-      print('Error scanning library: $e');
+      log('Error scanning library: $e');
     } finally {
       _isScanning = false;
       notifyListeners();

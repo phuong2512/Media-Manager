@@ -85,8 +85,7 @@ class MediaScannerService {
     final downloads = Directory('/storage/emulated/0/Download');
     final music = Directory('/storage/emulated/0/Music');
     final movies = Directory('/storage/emulated/0/Movies');
-    final dcim = Directory('/storage/emulated/0/DCIM');
-    result.addAll([downloads, music, movies, dcim]);
+    result.addAll([downloads, music, movies]);
     final extDirs = await getExternalStorageDirectories();
     if (extDirs != null) {
       result.addAll(extDirs);

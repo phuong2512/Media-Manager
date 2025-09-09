@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:media_manager/controllers/media_controller.dart';
 import 'package:provider/provider.dart';
@@ -42,16 +41,6 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
     super.dispose();
   }
 
-  List get filteredMediaList =>
-      context.watch<MediaController>().libraryMediaList.where((m) {
-        final isType = selectedTabIndex == 0
-            ? m.type == "Audio"
-            : m.type == "Video";
-        final name = m.path.split('/').last.split('.').first.toLowerCase();
-        final query = searchMedia.toLowerCase();
-        return isType && name.contains(query);
-      }).toList();
-
   void _handleMediaOptions(Media media) async {
     final action = await showMediaOptionsBottomSheet(context: context);
     if (!mounted) return;
@@ -69,7 +58,7 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
         context.read<MediaController>().rename(media, newName);
         setState(() {});
       }
-    } else if (action == 'share'){
+    } else if (action == 'share') {
       context.read<MediaController>().share(media.path);
     }
   }
@@ -162,11 +151,11 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
                   Expanded(
                     child: selectedTabIndex == 0
                         ? AudioTab(
-                            audioList: filteredMediaList,
+                            audioList: controller.filteredLibrary(type: "Audio", query: _searchController.text),
                             onMediaOptionsPressed: _handleMediaOptions,
                           )
                         : VideoTab(
-                            videoList: filteredMediaList,
+                            videoList: controller.filteredLibrary(type: "Video", query: _searchController.text),
                             onMediaOptionsPressed: _handleMediaOptions,
                           ),
                   ),
