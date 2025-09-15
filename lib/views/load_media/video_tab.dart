@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/models/media.dart';
+import 'package:media_manager/utils/app_colors.dart';
 
 class VideoTab extends StatelessWidget {
   final List videoList;
@@ -49,7 +50,7 @@ class VideoTab extends StatelessWidget {
                           children: [
                             Container(
                               decoration: const BoxDecoration(
-                                color: Color(0xFF2F3D4C),
+                                color: AppColors.fill,
                               ),
                             ),
                             Positioned(

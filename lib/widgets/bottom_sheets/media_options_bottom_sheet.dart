@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:media_manager/utils/app_colors.dart';
 import 'package:media_manager/widgets/option_list_tile.dart';
 
 class MediaOptionsBottomSheet extends StatelessWidget {
@@ -44,7 +45,7 @@ Future<String?> showMediaOptionsBottomSheet({required BuildContext context}) {
     useSafeArea: true,
     isScrollControlled: true,
     context: context,
-    backgroundColor: const Color(0xFF19222A),
+    backgroundColor: AppColors.background,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),

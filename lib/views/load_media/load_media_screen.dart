@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/controllers/media_controller.dart';
+import 'package:media_manager/utils/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:media_manager/models/media.dart';
 import 'package:media_manager/views/load_media/audio_tab.dart';
@@ -72,14 +73,17 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
               actions: [
                 IconButton(
                   onPressed: () {},
-                  icon: const Icon(Icons.settings, color: Color(0xFF215B9D)),
+                  icon: const Icon(
+                    Icons.settings,
+                    color: AppColors.iconPrimary,
+                  ),
                 ),
               ],
               leading: TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text(
                   "Cancel",
-                  style: TextStyle(color: Color(0XFF90C5E0), fontSize: 15),
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 15),
                 ),
               ),
               leadingWidth: 75,
@@ -105,8 +109,8 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 15),
                     child: TextField(
-                      style: const TextStyle(color: Color(0xFF718CA5)),
-                      cursorColor: const Color(0xFF718CA5),
+                      style: const TextStyle(color:  AppColors.textSecondary,),
+                      cursorColor: AppColors.textSecondary,
                       controller: _searchController,
                       onChanged: (value) {
                         setState(() {
@@ -115,17 +119,17 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
                       },
                       decoration: InputDecoration(
                         hintText: 'Search in your library...',
-                        hintStyle: const TextStyle(color: Color(0xFF718CA5)),
+                        hintStyle: const TextStyle(color: AppColors.textSecondary),
                         prefixIcon: const Icon(
                           Icons.search,
-                          color: Color(0xFF718CA5),
+                          color: AppColors.textSecondary,
                         ),
                         suffixIcon: IconButton(
                           onPressed: () {},
-                          icon: const Icon(Icons.mic, color: Color(0xFF718CA5)),
+                          icon: const Icon(Icons.mic, color: AppColors.textSecondary),
                         ),
                         filled: true,
-                        fillColor: const Color(0xFF2F3D4C),
+                        fillColor: AppColors.fill,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(25),
                           borderSide: BorderSide.none,
@@ -156,7 +160,7 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
                     onPressed: () => _showSortOptionsDialog(context),
                     icon: const Icon(
                       Icons.filter_list,
-                      color: Color(0xFF215B9D),
+                      color: AppColors.iconPrimary,
                       size: 30,
                     ),
                   ),
@@ -173,7 +177,7 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF2F3D4C) : Colors.transparent,
+          color: isSelected ? AppColors.fill : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Text(
@@ -181,8 +185,8 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
           style: TextStyle(
             fontSize: 15,
             color: isSelected
-                ? const Color(0XFF90C5E0)
-                : const Color(0xFF394753),
+                ? AppColors.textPrimary
+                : AppColors.textTertiary,
             fontWeight: FontWeight.bold,
           ),
         ),

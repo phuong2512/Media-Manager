@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/controllers/media_controller.dart';
+import 'package:media_manager/utils/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:media_manager/models/media.dart';
 import 'package:media_manager/views/load_media/load_media_screen.dart';
@@ -24,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.settings, color: Color(0xFF215B9D)),
+            icon: const Icon(Icons.settings, color: AppColors.iconPrimary),
           ),
         ],
       ),
@@ -112,9 +113,9 @@ class _HomeScreenState extends State<HomeScreen> {
               leading: media.type == "Audio"
                   ? const Icon(
                       Icons.play_circle_outline,
-                      color: Color(0xFFD48403),
+                      color: AppColors.iconAudio,
                     )
-                  : const Icon(Icons.ondemand_video, color: Colors.red),
+                  : const Icon(Icons.ondemand_video, color: AppColors.iconVideo),
               title: Text(
                 media.path.split('/').last.split('.').first,
                 maxLines: 1,

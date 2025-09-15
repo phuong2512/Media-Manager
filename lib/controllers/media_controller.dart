@@ -212,10 +212,7 @@ class MediaController extends ChangeNotifier {
         message = success ? 'Đổi tên thành công' : 'Đổi tên thất bại';
       }
     } else if (action == 'share') {
-      final success = await share(media.path);
-      if (!success) {
-        message = 'Chia sẻ file thất bại';
-      }
+      await share(media.path);
     }
 
     return message;

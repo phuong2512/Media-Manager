@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:media_manager/utils/app_colors.dart';
 
 class OptionListTile extends StatelessWidget {
   final String title;
@@ -15,8 +16,8 @@ class OptionListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      textColor: const Color(0XFF90C5E0),
-      iconColor: const Color(0XFF90C5E0),
+      textColor: AppColors.textPrimary,
+      iconColor: AppColors.textPrimary,
       title: Text(title),
       leading: Icon(icon),
       onTap: onTap,

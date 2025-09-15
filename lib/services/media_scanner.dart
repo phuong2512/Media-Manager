@@ -96,7 +96,6 @@ class MediaScannerService {
   List<File> _listMediaFilesRecursive(Directory dir) {
     final collected = <File>[];
     for (final entity in dir.listSync(recursive: true, followLinks: false)) {
-      //Liệt kê tất cả các tệp và thư mục con trong thư mục
       if (entity is File) {
         final ext = p.extension(entity.path).toLowerCase();
         if (_audioExtension.contains(ext) || _videoExtension.contains(ext)) {

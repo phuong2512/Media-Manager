@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/controllers/media_controller.dart';
+import 'package:media_manager/utils/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:media_manager/views/home/home_screen.dart';
 
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            backgroundColor: Color(0xFF19222A),
+            backgroundColor: AppColors.background,
             titleTextStyle: TextStyle(
               color: Colors.white,
               fontSize: 20,
@@ -31,10 +32,10 @@ class MyApp extends StatelessWidget {
           listTileTheme: ListTileThemeData(
             subtitleTextStyle: TextStyle(color: Colors.white30),
           ),
-          scaffoldBackgroundColor: Color(0xFF19222A),
+          scaffoldBackgroundColor: AppColors.background,
           appBarTheme: AppBarTheme(
             centerTitle: true,
-            backgroundColor: Color(0xFF19222A),
+            backgroundColor: AppColors.background,
             titleTextStyle: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 20,

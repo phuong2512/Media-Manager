@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/models/media.dart';
+import 'package:media_manager/utils/app_colors.dart';
 
 class DeleteMediaDialog extends StatelessWidget {
   final Media media;
@@ -31,7 +32,7 @@ class DeleteMediaDialog extends StatelessWidget {
                   shape: WidgetStatePropertyAll(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
-                      side: const BorderSide(color: Color(0xFF3C3F42)),
+                      side: const BorderSide(color: AppColors.borderSecondary),
                     ),
                   ),
                 ),

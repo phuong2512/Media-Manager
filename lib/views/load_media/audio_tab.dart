@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/models/media.dart';
+import 'package:media_manager/utils/app_colors.dart';
 import 'package:media_manager/utils/format.dart';
 
 class AudioTab extends StatelessWidget {
@@ -36,7 +37,7 @@ class AudioTab extends StatelessWidget {
                       return ListTile(
                         leading: const Icon(
                           Icons.play_circle_outline,
-                          color: Color(0xFFD48403),
+                          color: AppColors.iconAudio,
                         ),
                         title: Text(
                           audio.path.split('/').last.split('.').first,

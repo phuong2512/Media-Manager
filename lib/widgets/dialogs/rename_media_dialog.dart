@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/models/media.dart';
+import 'package:media_manager/utils/app_colors.dart';
 
 class RenameMediaDialog extends StatelessWidget {
   final Media media;
@@ -17,8 +18,8 @@ class RenameMediaDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
-            style: const TextStyle(color: Color(0xFF90C5E0)),
-            cursorColor: const Color(0xFF90C5E0),
+            style: const TextStyle(color: AppColors.textPrimary),
+            cursorColor: AppColors.textPrimary,
             controller: mediaNameController,
             decoration: InputDecoration(
               suffixIcon: IconButton(
@@ -29,7 +30,7 @@ class RenameMediaDialog extends StatelessWidget {
               hintText: 'Enter new file name',
               hintStyle: const TextStyle(color: Colors.white),
               filled: true,
-              fillColor: const Color(0xFF2F3D4C),
+              fillColor: AppColors.fill,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
                 borderSide: BorderSide.none,
@@ -49,7 +50,7 @@ class RenameMediaDialog extends StatelessWidget {
                   shape: WidgetStatePropertyAll(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
-                      side: const BorderSide(color: Color(0xFF3C3F42)),
+                      side: const BorderSide(color: AppColors.borderSecondary ),
                     ),
                   ),
                 ),
