@@ -4,9 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:media_manager/models/media.dart';
 import 'package:media_manager/views/load_media/load_media_screen.dart';
 import 'package:media_manager/utils/format.dart';
-import 'package:media_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
-import 'package:media_manager/widgets/dialogs/delete_media_dialog.dart';
-import 'package:media_manager/widgets/dialogs/rename_media_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -86,22 +83,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleMediaOptions(Media media) async {
-    final action = await showMediaOptionsBottomSheet(context: context);
-    if (!mounted) return;
-    if (action == 'delete') {
-      final confirmed = await showDeleteMediaDialog(context, media);
-      if (!mounted) return;
-      if (confirmed == true) {
-        await context.read<MediaController>().deleteByPath(media.path);
-      }
-    } else if (action == 'rename') {
-      final newName = await showRenameMediaDialog(context, media);
-      if (!mounted) return;
-      if (newName != null && newName.isNotEmpty) {
-        await context.read<MediaController>().rename(media, newName);
-      }
-    } else if (action == 'share') {
-      context.read<MediaController>().share(media.path);
+    final controller = context.read<MediaController>();
+    final message = await controller.handleMediaOptions(context, media);
+
+    if (message != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
     }
   }
 

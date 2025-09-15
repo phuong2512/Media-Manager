@@ -4,9 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:media_manager/models/media.dart';
 import 'package:media_manager/views/load_media/audio_tab.dart';
 import 'package:media_manager/views/load_media/video_tab.dart';
-import 'package:media_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
-import 'package:media_manager/widgets/dialogs/delete_media_dialog.dart';
-import 'package:media_manager/widgets/dialogs/rename_media_dialog.dart';
 
 class LoadMediaScreen extends StatefulWidget {
   const LoadMediaScreen({super.key});
@@ -42,24 +39,13 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
   }
 
   void _handleMediaOptions(Media media) async {
-    final action = await showMediaOptionsBottomSheet(context: context);
-    if (!mounted) return;
-    if (action == 'delete') {
-      final confirmed = await showDeleteMediaDialog(context, media);
-      if (!mounted) return;
-      if (confirmed == true) {
-        context.read<MediaController>().deleteByPath(media.path);
-        setState(() {});
-      }
-    } else if (action == 'rename') {
-      final newName = await showRenameMediaDialog(context, media);
-      if (!mounted) return;
-      if (newName != null && newName.isNotEmpty) {
-        context.read<MediaController>().rename(media, newName);
-        setState(() {});
-      }
-    } else if (action == 'share') {
-      context.read<MediaController>().share(media.path);
+    final controller = context.read<MediaController>();
+    final message = await controller.handleMediaOptions(context, media);
+
+    if (message != null && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
@@ -229,7 +215,10 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 25),
                   child: Row(
                     children: [
-                      const Text('Từ mới đến cũ', style: TextStyle(fontSize: 19)),
+                      const Text(
+                        'Từ mới đến cũ',
+                        style: TextStyle(fontSize: 19),
+                      ),
                       SizedBox(width: 10),
                       if (controller.isSortNewestFirst)
                         const Icon(Icons.check, color: Colors.cyan, size: 45),

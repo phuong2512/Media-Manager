@@ -1,6 +1,9 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:media_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
+import 'package:media_manager/widgets/dialogs/delete_media_dialog.dart';
+import 'package:media_manager/widgets/dialogs/rename_media_dialog.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:media_manager/models/media.dart';
@@ -66,7 +69,9 @@ class MediaController extends ChangeNotifier {
 
       if (exists) {
         await file.delete();
-      } else {}
+      } else {
+        return false;
+      }
       _libraryMediaList.removeWhere((m) => m.path == path);
       _homeMediaList.removeWhere((m) => m.path == path);
       notifyListeners();
@@ -96,6 +101,8 @@ class MediaController extends ChangeNotifier {
       final exists = await oldFile.exists();
       if (exists) {
         await oldFile.rename(newPath);
+      } else {
+        return false;
       }
 
       FileStat? updatedStat;
@@ -127,13 +134,15 @@ class MediaController extends ChangeNotifier {
   }
 
   Future<bool> share(String path) async {
-    try{
+    try {
       final file = File(path);
       final exists = await file.exists();
 
       if (exists) {
         final params = ShareParams(files: [XFile(file.path)]);
         await SharePlus.instance.share(params);
+      } else {
+        return false;
       }
       notifyListeners();
       return true;
@@ -180,5 +189,35 @@ class MediaController extends ChangeNotifier {
     }
     final storageStatus = await Permission.storage.request();
     return storageStatus.isGranted;
+  }
+
+  Future<String?> handleMediaOptions(BuildContext context, Media media) async {
+    final action = await showMediaOptionsBottomSheet(context: context);
+    if (action == null) return null;
+
+    String? message;
+
+    if (action == 'delete') {
+      if (!context.mounted) return null;
+      final confirmed = await showDeleteMediaDialog(context, media);
+      if (confirmed == true) {
+        final success = await deleteByPath(media.path);
+        message = success ? 'Xóa file thành công' : 'Xóa file thất bại';
+      }
+    } else if (action == 'rename') {
+      if (!context.mounted) return null;
+      final newName = await showRenameMediaDialog(context, media);
+      if (newName != null && newName.isNotEmpty) {
+        final success = await rename(media, newName);
+        message = success ? 'Đổi tên thành công' : 'Đổi tên thất bại';
+      }
+    } else if (action == 'share') {
+      final success = await share(media.path);
+      if (!success) {
+        message = 'Chia sẻ file thất bại';
+      }
+    }
+
+    return message;
   }
 }
