@@ -7,29 +7,19 @@ import 'package:media_manager/services/duration_service.dart';
 
 class MediaScannerService {
   static const _audioExtension = [
-    '.mp3',
-    '.m4a',
-    '.wav',
-    '.aac',
-    '.flac',
-    '.ogg',
+    '.mp3', '.m4a', '.wav', '.aac', '.flac', '.ogg',
   ];
   static const _videoExtension = [
-    '.mp4',
-    '.mkv',
-    '.mov',
-    '.avi',
-    '.webm',
-    '.3gp',
+    '.mp4', '.mkv', '.mov', '.avi', '.webm', '.3gp',
   ];
 
-  final DurationService _durationService = DurationService.instance;
+  final DurationService _durationService;
+
+  MediaScannerService(this._durationService);
 
   Future<List<Media>> scanAll() async {
     final hasPermission = await _requestStoragePermissions();
-    if (!hasPermission) {
-      return [];
-    }
+    if (!hasPermission) return [];
 
     final roots = await _getCandidateRoots();
     final files = <File>[];
@@ -40,7 +30,6 @@ class MediaScannerService {
     }
 
     final items = <Media>[];
-
     final futures = files.map((f) async {
       final stat = await f.stat();
       final ext = p.extension(f.path).toLowerCase();
@@ -64,28 +53,25 @@ class MediaScannerService {
 
     final results = await Future.wait(futures);
     items.addAll(results.where((item) => item != null).cast<Media>());
-
     return items;
   }
 
   Future<bool> _requestStoragePermissions() async {
-    if (await Permission.manageExternalStorage.isGranted) {
-      return true;
-    }
+    if (await Permission.manageExternalStorage.isGranted) return true;
     final status = await Permission.manageExternalStorage.request();
-    if (status.isGranted) {
-      return true;
-    }
+    if (status.isGranted) return true;
+
     final storageStatus = await Permission.storage.request();
     return storageStatus.isGranted;
   }
 
   Future<List<Directory>> _getCandidateRoots() async {
     final result = <Directory>[];
-    final downloads = Directory('/storage/emulated/0/Download');
-    final music = Directory('/storage/emulated/0/Music');
-    final movies = Directory('/storage/emulated/0/Movies');
-    result.addAll([downloads, music, movies]);
+    result.addAll([
+      Directory('/storage/emulated/0/Download'),
+      Directory('/storage/emulated/0/Music'),
+      Directory('/storage/emulated/0/Movies'),
+    ]);
     final extDirs = await getExternalStorageDirectories();
     if (extDirs != null) {
       result.addAll(extDirs);

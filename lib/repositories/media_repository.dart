@@ -6,7 +6,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 
 class MediaRepository implements MediaRepositoryInterface {
-  final MediaScannerService _scanner = MediaScannerService();
+  final MediaScannerService _scanner;
+
+  MediaRepository(this._scanner);
 
   @override
   Future<List<Media>> scanAllMedia() async {
@@ -20,14 +22,12 @@ class MediaRepository implements MediaRepositoryInterface {
       if (!hasPermission) return false;
 
       final file = File(path);
-      final exists = await file.exists();
-
-      if (exists) {
+      if (await file.exists()) {
         await file.delete();
         return true;
       }
       return false;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }
@@ -43,13 +43,12 @@ class MediaRepository implements MediaRepositoryInterface {
       final extension = media.path.split('.').last;
       final newPath = '$directoryPath/$newName.$extension';
 
-      final exists = await oldFile.exists();
-      if (exists) {
+      if (await oldFile.exists()) {
         await oldFile.rename(newPath);
         return true;
       }
       return false;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }
@@ -58,15 +57,13 @@ class MediaRepository implements MediaRepositoryInterface {
   Future<bool> shareMedia(String path) async {
     try {
       final file = File(path);
-      final exists = await file.exists();
-
-      if (exists) {
+      if (await file.exists()) {
         final params = ShareParams(files: [XFile(file.path)]);
         await SharePlus.instance.share(params);
         return true;
       }
       return false;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }
@@ -77,9 +74,8 @@ class MediaRepository implements MediaRepositoryInterface {
       return true;
     }
     final status = await Permission.manageExternalStorage.request();
-    if (status.isGranted) {
-      return true;
-    }
+    if (status.isGranted) return true;
+
     final storageStatus = await Permission.storage.request();
     return storageStatus.isGranted;
   }
