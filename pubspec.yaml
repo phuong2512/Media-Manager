@@ -20,6 +20,7 @@ dependencies:
   video_player: ^2.8.2
   share_plus: ^11.1.0
   pool: ^1.5.1
+  get_it: ^8.2.0
 
 dev_dependencies:
   flutter_test:

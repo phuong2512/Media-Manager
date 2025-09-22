@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/controllers/media_controller.dart';
+import 'package:media_manager/repositories/media_repository.dart';
 import 'package:media_manager/utils/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:media_manager/views/home/home_screen.dart';
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => MediaController(),
+      create: (_) => MediaController(repository: MediaRepository()),
       child: MaterialApp(
         title: 'Media Manager',
         theme: ThemeData(

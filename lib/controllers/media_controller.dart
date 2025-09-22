@@ -1,17 +1,18 @@
 import 'dart:developer';
 
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:media_manager/repositories/media_repository_interface.dart';
 import 'package:media_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
 import 'package:media_manager/widgets/dialogs/delete_media_dialog.dart';
 import 'package:media_manager/widgets/dialogs/rename_media_dialog.dart';
-import 'dart:io';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:media_manager/models/media.dart';
-import 'package:media_manager/services/media_scanner.dart';
-import 'package:share_plus/share_plus.dart';
 
 class MediaController extends ChangeNotifier {
-  MediaController() {
+  final MediaRepositoryInterface _repository;
+
+  MediaController({required MediaRepositoryInterface repository})
+    : _repository = repository {
     _libraryMediaList = [];
     _homeMediaList = [];
     _isLibraryScanned = false;
@@ -22,7 +23,6 @@ class MediaController extends ChangeNotifier {
   bool _isSortNewestFirst = true;
   bool _isLibraryScanned = false;
   bool _isScanning = false;
-  final MediaScannerService _scanner = MediaScannerService();
 
   List<Media> get libraryMediaList => _libraryMediaList;
 
@@ -59,94 +59,69 @@ class MediaController extends ChangeNotifier {
 
   Future<bool> deleteByPath(String path) async {
     try {
-      final hasPermission = await _checkStoragePermission();
-      if (!hasPermission) {
-        return false;
+      final success = await _repository.deleteMedia(path);
+      if (success) {
+        _libraryMediaList.removeWhere((m) => m.path == path);
+        _homeMediaList.removeWhere((m) => m.path == path);
+        notifyListeners();
       }
-
-      final file = File(path);
-      final exists = await file.exists();
-
-      if (exists) {
-        await file.delete();
-      } else {
-        return false;
-      }
-      _libraryMediaList.removeWhere((m) => m.path == path);
-      _homeMediaList.removeWhere((m) => m.path == path);
-      notifyListeners();
-      return true;
+      return success;
     } catch (e) {
+      log('Error deleting media: $e');
       return false;
     }
   }
 
   Future<bool> rename(Media target, String newName) async {
     final index = _libraryMediaList.indexWhere((m) => m.path == target.path);
-    if (index == -1) {
-      return false;
-    }
+    if (index == -1) return false;
+
     final oldMedia = _libraryMediaList[index];
+
     try {
-      final hasPermission = await _checkStoragePermission();
-      if (!hasPermission) {
-        return false;
+      final success = await _repository.renameMedia(oldMedia, newName);
+      if (success) {
+        // Create updated media object
+        final directoryPath = File(oldMedia.path).parent.path;
+        final extension = oldMedia.path.split('.').last;
+        final newPath = '$directoryPath/$newName.$extension';
+
+        FileStat? updatedStat;
+        try {
+          updatedStat = await File(newPath).stat();
+        } catch (e) {
+          updatedStat = await File(oldMedia.path).stat();
+        }
+
+        final updated = Media(
+          path: newPath,
+          duration: oldMedia.duration,
+          size: updatedStat.size,
+          lastModified: updatedStat.modified,
+          type: oldMedia.type,
+        );
+
+        _libraryMediaList[index] = updated;
+        final homeIndex = _homeMediaList.indexWhere(
+          (m) => m.path == target.path,
+        );
+        if (homeIndex != -1) {
+          _homeMediaList[homeIndex] = updated;
+        }
+        notifyListeners();
       }
-
-      final oldFile = File(oldMedia.path);
-      final directoryPath = oldFile.parent.path;
-      final extension = oldMedia.path.split('.').last;
-      final newPath = '$directoryPath/$newName.$extension';
-
-      final exists = await oldFile.exists();
-      if (exists) {
-        await oldFile.rename(newPath);
-      } else {
-        return false;
-      }
-
-      FileStat? updatedStat;
-      try {
-        updatedStat = await File(newPath).stat();
-      } catch (e) {
-        updatedStat = await oldFile.stat();
-      }
-
-      final updated = Media(
-        path: newPath,
-        duration: oldMedia.duration,
-        size: updatedStat.size,
-        lastModified: updatedStat.modified,
-        type: oldMedia.type,
-      );
-
-      _libraryMediaList[index] = updated;
-      final homeIndex = _homeMediaList.indexWhere((m) => m.path == target.path);
-      if (homeIndex != -1) {
-        _homeMediaList[homeIndex] = updated;
-      }
-      notifyListeners();
-
-      return true;
+      return success;
     } catch (e) {
+      log('Error renaming media: $e');
       return false;
     }
   }
 
   Future<bool> share(String path) async {
     try {
-      final file = File(path);
-      final exists = await file.exists();
-
-      if (exists) {
-        final params = ShareParams(files: [XFile(file.path)]);
-        await SharePlus.instance.share(params);
-      } else {
-        return false;
-      }
-      notifyListeners();
-      return true;
+      return await _repository.shareMedia(path);
     } catch (e) {
+      log('Error sharing media: $e');
       return false;
     }
   }
@@ -162,13 +137,13 @@ class MediaController extends ChangeNotifier {
   }
 
   Future<void> scanLibrary() async {
-    if (_isLibraryScanned || _isScanning) {
-      return;
-    }
+    if (_isLibraryScanned || _isScanning) return;
+
     _isScanning = true;
     notifyListeners();
+
     try {
-      final scanned = await _scanner.scanAll();
+      final scanned = await _repository.scanAllMedia();
       _libraryMediaList = scanned;
       _isLibraryScanned = true;
     } catch (e) {
@@ -177,18 +152,6 @@ class MediaController extends ChangeNotifier {
       _isScanning = false;
       notifyListeners();
     }
-  }
-
-  Future<bool> _checkStoragePermission() async {
-    if (await Permission.manageExternalStorage.isGranted) {
-      return true;
-    }
-    final status = await Permission.manageExternalStorage.request();
-    if (status.isGranted) {
-      return true;
-    }
-    final storageStatus = await Permission.storage.request();
-    return storageStatus.isGranted;
   }
 
   Future<String?> handleMediaOptions(BuildContext context, Media media) async {
