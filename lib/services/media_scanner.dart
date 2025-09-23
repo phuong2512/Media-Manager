@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -7,10 +8,20 @@ import 'package:media_manager/services/duration_service.dart';
 
 class MediaScannerService {
   static const _audioExtension = [
-    '.mp3', '.m4a', '.wav', '.aac', '.flac', '.ogg',
+    '.mp3',
+    '.m4a',
+    '.wav',
+    '.aac',
+    '.flac',
+    '.ogg',
   ];
   static const _videoExtension = [
-    '.mp4', '.mkv', '.mov', '.avi', '.webm', '.3gp',
+    '.mp4',
+    '.mkv',
+    '.mov',
+    '.avi',
+    '.webm',
+    '.3gp',
   ];
 
   final DurationService _durationService;
@@ -22,37 +33,40 @@ class MediaScannerService {
     if (!hasPermission) return [];
 
     final roots = await _getCandidateRoots();
-    final files = <File>[];
+    final items = <Media>[];
+
     for (final dir in roots) {
       if (await dir.exists()) {
-        files.addAll(_listMediaFilesRecursive(dir));
+        final paths = await _listMediaFilesRecursiveAsync(dir.path);
+
+        for (final path in paths) {
+          final f = File(path);
+          if (!await f.exists()) continue;
+
+          final stat = await f.stat();
+          final ext = p.extension(f.path).toLowerCase();
+          final isAudio = _audioExtension.contains(ext);
+          final isVideo = _videoExtension.contains(ext);
+          if (!isAudio && !isVideo) continue;
+
+          final duration = await _durationService.getMediaDuration(
+            f.path,
+            isAudio ? 'Audio' : 'Video',
+          );
+
+          items.add(
+            Media(
+              path: f.path,
+              duration: duration,
+              size: stat.size,
+              lastModified: stat.modified,
+              type: isAudio ? 'Audio' : 'Video',
+            ),
+          );
+        }
       }
     }
 
-    final items = <Media>[];
-    final futures = files.map((f) async {
-      final stat = await f.stat();
-      final ext = p.extension(f.path).toLowerCase();
-      final isAudio = _audioExtension.contains(ext);
-      final isVideo = _videoExtension.contains(ext);
-      if (!isAudio && !isVideo) return null;
-
-      final duration = await _durationService.getMediaDuration(
-        f.path,
-        isAudio ? 'Audio' : 'Video',
-      );
-
-      return Media(
-        path: f.path,
-        duration: duration,
-        size: stat.size,
-        lastModified: stat.modified,
-        type: isAudio ? 'Audio' : 'Video',
-      );
-    });
-
-    final results = await Future.wait(futures);
-    items.addAll(results.where((item) => item != null).cast<Media>());
     return items;
   }
 
@@ -79,16 +93,28 @@ class MediaScannerService {
     return result;
   }
 
-  List<File> _listMediaFilesRecursive(Directory dir) {
-    final collected = <File>[];
-    for (final entity in dir.listSync(recursive: true, followLinks: false)) {
-      if (entity is File) {
-        final ext = p.extension(entity.path).toLowerCase();
-        if (_audioExtension.contains(ext) || _videoExtension.contains(ext)) {
-          collected.add(entity);
+  static Future<List<String>> _listMediaFilesRecursiveAsync(
+    String dirPath,
+  ) async {
+    final collected = <String>[];
+    final dir = Directory(dirPath);
+
+    try {
+      await for (final entity in dir.list(
+        recursive: true,
+        followLinks: false,
+      )) {
+        if (entity is File) {
+          final ext = p.extension(entity.path).toLowerCase();
+          if (_audioExtension.contains(ext) || _videoExtension.contains(ext)) {
+            collected.add(entity.path);
+          }
         }
       }
+    } catch (e) {
+      debugPrint('Error: $e');
     }
+
     return collected;
   }
 }

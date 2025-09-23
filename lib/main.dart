@@ -19,7 +19,7 @@ void setupLocator() {
   getIt.registerLazySingleton<MediaRepositoryInterface>(
     () => MediaRepository(getIt<MediaScannerService>()),
   );
-  getIt.registerFactory(() => MediaController(repository: getIt()));
+  getIt.registerFactory(() => MediaController(repository: getIt<MediaRepositoryInterface>()));
 }
 
 void main() {

@@ -1,12 +1,13 @@
 import 'dart:io';
 import 'dart:developer';
 import 'package:just_audio/just_audio.dart';
-import 'package:pool/pool.dart';
 import 'package:video_player/video_player.dart';
 
 class DurationService {
   static final DurationService _instance = DurationService._internal();
+
   factory DurationService() => _instance;
+
   DurationService._internal();
 
   static DurationService get instance => _instance;
@@ -41,30 +42,14 @@ class DurationService {
         'duration': duration,
         'lastModified': lastModified,
       };
+
       return duration;
     } catch (e) {
-      log('Error getting duration for $filePath: $e');
+      log('Error getting media duration for $filePath: $e');
       return '00:00';
     }
   }
-  Future<Map<String, String>> preloadDurations(
-      List<Map<String, String>> files, {
-        int maxConcurrent = 5,
-      }) async {
-    final pool = Pool(maxConcurrent);
-    final results = <String, String>{};
 
-    await Future.wait(files.map((file) async {
-      return pool.withResource(() async {
-        final path = file['path']!;
-        final type = file['type']!;
-        final duration = await getMediaDuration(path, type);
-        results[path] = duration;
-      });
-    }));
-
-    return results;
-  }
   // audio
   Future<String> _getAudioDuration(String filePath) async {
     try {
@@ -99,12 +84,8 @@ class DurationService {
     final seconds = duration.inSeconds.remainder(60);
 
     if (hours > 0) {
-      return '${hours.toString().padLeft(2, '0')}:'
-             '${minutes.toString().padLeft(2, '0')}:'
-             '${seconds.toString().padLeft(2, '0')}';
-    } else {
-      return '${minutes.toString().padLeft(2, '0')}:'
-             '${seconds.toString().padLeft(2, '0')}';
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 }

@@ -1,6 +1,6 @@
 class Media {
   final String path;
-  final String duration;
+  String duration;
   final int size;
   final DateTime lastModified;
   final String type;
