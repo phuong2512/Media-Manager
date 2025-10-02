@@ -37,37 +37,31 @@ class MediaScannerService {
     for (final dir in roots) {
       if (await dir.exists()) {
         final paths = await _getMediaFilePaths(dir.path);
-        const batchSize = 10;
-        for (var i = 0; i < paths.length; i += batchSize) {
-          final batch = paths.sublist(
-            i,
-            i + batchSize > paths.length ? paths.length : i + batchSize,
+
+        for (final path in paths) {
+          final f = File(path);
+          if (!await f.exists()) continue;
+
+          final stat = await f.stat();
+          final ext = p.extension(f.path).toLowerCase();
+          final isAudio = _audioExtensions.contains(ext);
+          final isVideo = _videoExtensions.contains(ext);
+          if (!isAudio && !isVideo) continue;
+
+          final duration = await _durationService.getMediaDuration(
+            f.path,
+            isAudio ? 'Audio' : 'Video',
           );
-          for (final path in batch) {
-            final f = File(path);
-            if (!await f.exists()) continue;
 
-            final stat = await f.stat();
-            final ext = p.extension(f.path).toLowerCase();
-            final isAudio = _audioExtensions.contains(ext);
-            final isVideo = _videoExtensions.contains(ext);
-            if (!isAudio && !isVideo) continue;
-
-            final duration = await _durationService.getMediaDuration(
-              f.path,
-              isAudio ? 'Audio' : 'Video',
-            );
-
-            items.add(
-              Media(
-                path: f.path,
-                duration: duration,
-                size: stat.size,
-                lastModified: stat.modified,
-                type: isAudio ? 'Audio' : 'Video',
-              ),
-            );
-          }
+          items.add(
+            Media(
+              path: f.path,
+              duration: duration,
+              size: stat.size,
+              lastModified: stat.modified,
+              type: isAudio ? 'Audio' : 'Video',
+            ),
+          );
         }
       }
     }
