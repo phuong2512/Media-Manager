@@ -1,13 +1,17 @@
 import 'dart:developer';
 import 'dart:io';
+import 'package:media_manager/interfaces/media_service_interface.dart';
 import 'package:media_manager/models/media.dart';
 import 'package:media_manager/services/media_scanner_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 
-class MediaService {
+class MediaService implements MediaServiceInterface {
   final MediaScannerService _scanner;
+
   MediaService({required MediaScannerService scanner}) : _scanner = scanner;
+
+  @override
   Future<bool> checkPermissions() async {
     if (await Permission.manageExternalStorage.isGranted) {
       return true;
@@ -18,6 +22,7 @@ class MediaService {
     return storageStatus.isGranted;
   }
 
+  @override
   Future<bool> deleteMedia(String path) async {
     try {
       final hasPermission = await checkPermissions();
@@ -34,6 +39,7 @@ class MediaService {
     }
   }
 
+  @override
   Future<Media?> renameMedia(Media media, String newName) async {
     try {
       final hasPermission = await checkPermissions();
@@ -65,6 +71,7 @@ class MediaService {
     }
   }
 
+  @override
   Future<bool> shareMedia(String path) async {
     try {
       final file = File(path);
@@ -80,6 +87,7 @@ class MediaService {
     }
   }
 
+  @override
   Future<List<Media>> scanDeviceDirectory() async {
     try {
       return await _scanner.scanDeviceDirectory();

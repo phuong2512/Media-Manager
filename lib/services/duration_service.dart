@@ -4,14 +4,6 @@ import 'package:just_audio/just_audio.dart';
 import 'package:video_player/video_player.dart';
 
 class DurationService {
-  static final DurationService _instance = DurationService._internal();
-
-  factory DurationService() => _instance;
-
-  DurationService._internal();
-
-  static DurationService get instance => _instance;
-
   final Map<String, Map<String, dynamic>> _durationCache = {};
 
   Future<String> getMediaDuration(String filePath, String type) async {

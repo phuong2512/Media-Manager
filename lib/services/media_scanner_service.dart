@@ -1,13 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:media_manager/models/media.dart';
 import 'package:media_manager/services/duration_service.dart';
 
 class MediaScannerService {
-  static const _audioExtension = [
+  static const _audioExtensions = [
     '.mp3',
     '.m4a',
     '.wav',
@@ -15,7 +14,7 @@ class MediaScannerService {
     '.flac',
     '.ogg',
   ];
-  static const _videoExtension = [
+  static const _videoExtensions = [
     '.mp4',
     '.mkv',
     '.mov',
@@ -37,32 +36,38 @@ class MediaScannerService {
 
     for (final dir in roots) {
       if (await dir.exists()) {
-        final paths = await _listMediaFilesRecursiveAsync(dir.path);
-
-        for (final path in paths) {
-          final f = File(path);
-          if (!await f.exists()) continue;
-
-          final stat = await f.stat();
-          final ext = p.extension(f.path).toLowerCase();
-          final isAudio = _audioExtension.contains(ext);
-          final isVideo = _videoExtension.contains(ext);
-          if (!isAudio && !isVideo) continue;
-
-          final duration = await _durationService.getMediaDuration(
-            f.path,
-            isAudio ? 'Audio' : 'Video',
+        final paths = await _getMediaFilePaths(dir.path);
+        const batchSize = 10;
+        for (var i = 0; i < paths.length; i += batchSize) {
+          final batch = paths.sublist(
+            i,
+            i + batchSize > paths.length ? paths.length : i + batchSize,
           );
+          for (final path in batch) {
+            final f = File(path);
+            if (!await f.exists()) continue;
 
-          items.add(
-            Media(
-              path: f.path,
-              duration: duration,
-              size: stat.size,
-              lastModified: stat.modified,
-              type: isAudio ? 'Audio' : 'Video',
-            ),
-          );
+            final stat = await f.stat();
+            final ext = p.extension(f.path).toLowerCase();
+            final isAudio = _audioExtensions.contains(ext);
+            final isVideo = _videoExtensions.contains(ext);
+            if (!isAudio && !isVideo) continue;
+
+            final duration = await _durationService.getMediaDuration(
+              f.path,
+              isAudio ? 'Audio' : 'Video',
+            );
+
+            items.add(
+              Media(
+                path: f.path,
+                duration: duration,
+                size: stat.size,
+                lastModified: stat.modified,
+                type: isAudio ? 'Audio' : 'Video',
+              ),
+            );
+          }
         }
       }
     }
@@ -86,35 +91,25 @@ class MediaScannerService {
       Directory('/storage/emulated/0/Music'),
       Directory('/storage/emulated/0/Movies'),
     ]);
-    final extDirs = await getExternalStorageDirectories();
-    if (extDirs != null) {
-      result.addAll(extDirs);
-    }
     return result;
   }
 
-  static Future<List<String>> _listMediaFilesRecursiveAsync(
-    String dirPath,
-  ) async {
-    final collected = <String>[];
+  static Future<List<String>> _getMediaFilePaths(String dirPath) async {
     final dir = Directory(dirPath);
-
+    final extensions = {..._audioExtensions, ..._videoExtensions};
     try {
-      await for (final entity in dir.list(
-        recursive: true,
-        followLinks: false,
-      )) {
-        if (entity is File) {
-          final ext = p.extension(entity.path).toLowerCase();
-          if (_audioExtension.contains(ext) || _videoExtension.contains(ext)) {
-            collected.add(entity.path);
-          }
-        }
-      }
+      return await dir
+          .list(recursive: true, followLinks: false)
+          .where(
+            (e) =>
+                e is File &&
+                extensions.contains(p.extension(e.path).toLowerCase()),
+          )
+          .map((e) => e.path)
+          .toList();
     } catch (e) {
-      debugPrint('Error: $e');
+      debugPrint('Error scanning $dirPath: $e');
+      return [];
     }
-
-    return collected;
   }
 }

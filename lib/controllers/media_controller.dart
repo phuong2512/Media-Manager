@@ -1,34 +1,33 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:media_manager/models/media.dart';
-import 'package:media_manager/services/media_service.dart';
+import 'package:media_manager/interfaces/media_service_interface.dart';
 import 'package:media_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
 import 'package:media_manager/widgets/dialogs/delete_media_dialog.dart';
 import 'package:media_manager/widgets/dialogs/rename_media_dialog.dart';
 
 class MediaController extends ChangeNotifier {
-  final MediaService _service;
+  final MediaServiceInterface _service;
 
-  MediaController({required MediaService service}) : _service = service {
+  MediaController({required MediaServiceInterface service}) : _service = service {
     _libraryMediaList = [];
     _homeMediaList = [];
     _isLibraryScanned = false;
   }
 
   late List<Media> _libraryMediaList;
-  late List<Media> _homeMediaList;
-  bool _isSortNewestFirst = true;
-  bool _isLibraryScanned = false;
-  bool _isScanning = false;
-
   List<Media> get libraryMediaList => _libraryMediaList;
 
+  late List<Media> _homeMediaList;
   List<Media> get homeMediaList => _homeMediaList;
 
+  bool _isSortNewestFirst = true;
   bool get isSortNewestFirst => _isSortNewestFirst;
 
+  bool _isLibraryScanned = false;
   bool get isLibraryScanned => _isLibraryScanned;
 
+  bool _isScanning = false;
   bool get isScanning => _isScanning;
 
   List<Media> get audioList =>
@@ -114,10 +113,11 @@ class MediaController extends ChangeNotifier {
   }
 
   Future<String?> handleMediaOptions(BuildContext context, Media media) async {
+    String? message;
+
     final action = await showMediaOptionsBottomSheet(context: context);
     if (action == null) return null;
 
-    String? message;
 
     if (action == 'delete') {
       if (!context.mounted) return null;
