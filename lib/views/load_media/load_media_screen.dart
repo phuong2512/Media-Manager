@@ -226,15 +226,13 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
                         style: TextStyle(fontSize: 19),
                       ),
                       SizedBox(width: 10),
-                      if (controller.isSortNewestFirst)
+                      if (controller.sortOrder == SortOrder.newestFirst)
                         const Icon(Icons.check, color: Colors.cyan, size: 45),
                     ],
                   ),
                 ),
                 onTap: () {
-                  if (!controller.isSortNewestFirst) {
-                    controller.sortToggleByLastModified();
-                  }
+                  controller.sortToggleByLastModified(SortOrder.newestFirst);
                   Navigator.pop(context);
                 },
               ),
@@ -248,15 +246,13 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
                         style: TextStyle(fontSize: 19),
                       ),
                       SizedBox(width: 10),
-                      if (!controller.isSortNewestFirst)
+                      if (controller.sortOrder == SortOrder.oldestFirst)
                         const Icon(Icons.check, color: Colors.cyan, size: 45),
                     ],
                   ),
                 ),
                 onTap: () {
-                  if (controller.isSortNewestFirst) {
-                    controller.sortToggleByLastModified();
-                  }
+                  controller.sortToggleByLastModified(SortOrder.oldestFirst);
                   Navigator.pop(context);
                 },
               ),

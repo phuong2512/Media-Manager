@@ -6,6 +6,8 @@ import 'package:media_manager/widgets/bottom_sheets/media_options_bottom_sheet.d
 import 'package:media_manager/widgets/dialogs/delete_media_dialog.dart';
 import 'package:media_manager/widgets/dialogs/rename_media_dialog.dart';
 
+enum SortOrder { none, newestFirst, oldestFirst }
+
 class MediaController extends ChangeNotifier {
   final MediaServiceInterface _service;
 
@@ -13,16 +15,17 @@ class MediaController extends ChangeNotifier {
     _libraryMediaList = [];
     _homeMediaList = [];
     _isLibraryScanned = false;
+    _sortOrder = SortOrder.none;
   }
+
+  SortOrder _sortOrder = SortOrder.none;
+  SortOrder get sortOrder => _sortOrder;
 
   late List<Media> _libraryMediaList;
   List<Media> get libraryMediaList => _libraryMediaList;
 
   late List<Media> _homeMediaList;
   List<Media> get homeMediaList => _homeMediaList;
-
-  bool _isSortNewestFirst = true;
-  bool get isSortNewestFirst => _isSortNewestFirst;
 
   bool _isLibraryScanned = false;
   bool get isLibraryScanned => _isLibraryScanned;
@@ -84,19 +87,19 @@ class MediaController extends ChangeNotifier {
     return await _service.shareMedia(path);
   }
 
-  void sortToggleByLastModified() {
+  void sortToggleByLastModified(SortOrder order) {
+    if (order == SortOrder.none) return;
+    _sortOrder = order;
     _libraryMediaList.sort(
-      (a, b) => _isSortNewestFirst
+      (a, b) => order == SortOrder.newestFirst
           ? a.lastModified.compareTo(b.lastModified)
           : b.lastModified.compareTo(a.lastModified),
     );
-    _isSortNewestFirst = !_isSortNewestFirst;
     notifyListeners();
   }
 
   Future<void> scanDeviceDirectory() async {
     if (_isLibraryScanned || _isScanning) return;
-
     _isScanning = true;
     notifyListeners();
 
@@ -104,6 +107,9 @@ class MediaController extends ChangeNotifier {
       final scanned = await _service.scanDeviceDirectory();
       _libraryMediaList = scanned;
       _isLibraryScanned = true;
+      if (_sortOrder != SortOrder.none) {
+        sortToggleByLastModified(_sortOrder);
+      }
     } catch (e) {
       log('Error scanning library: $e');
     } finally {
@@ -117,7 +123,6 @@ class MediaController extends ChangeNotifier {
 
     final action = await showMediaOptionsBottomSheet(context: context);
     if (action == null) return null;
-
 
     if (action == 'delete') {
       if (!context.mounted) return null;
