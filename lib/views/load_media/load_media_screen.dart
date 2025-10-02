@@ -28,7 +28,7 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
     final controller = context.read<MediaController>();
     if (!controller.isLibraryScanned && !controller.isScanning) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await controller.scanLibrary();
+        await controller.scanDeviceDirectory();
       });
     }
   }
@@ -109,7 +109,7 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 15),
                     child: TextField(
-                      style: const TextStyle(color:  AppColors.textSecondary,),
+                      style: const TextStyle(color: AppColors.textSecondary),
                       cursorColor: AppColors.textSecondary,
                       controller: _searchController,
                       onChanged: (value) {
@@ -119,14 +119,19 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
                       },
                       decoration: InputDecoration(
                         hintText: 'Search in your library...',
-                        hintStyle: const TextStyle(color: AppColors.textSecondary),
+                        hintStyle: const TextStyle(
+                          color: AppColors.textSecondary,
+                        ),
                         prefixIcon: const Icon(
                           Icons.search,
                           color: AppColors.textSecondary,
                         ),
                         suffixIcon: IconButton(
                           onPressed: () {},
-                          icon: const Icon(Icons.mic, color: AppColors.textSecondary),
+                          icon: const Icon(
+                            Icons.mic,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                         filled: true,
                         fillColor: AppColors.fill,
@@ -184,9 +189,7 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
           label,
           style: TextStyle(
             fontSize: 15,
-            color: isSelected
-                ? AppColors.textPrimary
-                : AppColors.textTertiary,
+            color: isSelected ? AppColors.textPrimary : AppColors.textTertiary,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -196,7 +199,6 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
 
   void _showSortOptionsDialog(BuildContext context) {
     final controller = context.read<MediaController>();
-
     showDialog(
       context: context,
       builder: (context) {

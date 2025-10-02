@@ -28,7 +28,7 @@ class MediaScannerService {
 
   MediaScannerService(this._durationService);
 
-  Future<List<Media>> scanAll() async {
+  Future<List<Media>> scanDeviceDirectory() async {
     final hasPermission = await _requestStoragePermissions();
     if (!hasPermission) return [];
 

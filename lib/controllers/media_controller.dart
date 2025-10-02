@@ -1,18 +1,15 @@
 import 'dart:developer';
-
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:media_manager/repositories/media_repository_interface.dart';
+import 'package:media_manager/models/media.dart';
+import 'package:media_manager/services/media_service.dart';
 import 'package:media_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
 import 'package:media_manager/widgets/dialogs/delete_media_dialog.dart';
 import 'package:media_manager/widgets/dialogs/rename_media_dialog.dart';
-import 'package:media_manager/models/media.dart';
 
 class MediaController extends ChangeNotifier {
-  final MediaRepositoryInterface _repository;
+  final MediaService _service;
 
-  MediaController({required MediaRepositoryInterface repository})
-    : _repository = repository {
+  MediaController({required MediaService service}) : _service = service {
     _libraryMediaList = [];
     _homeMediaList = [];
     _isLibraryScanned = false;
@@ -57,73 +54,35 @@ class MediaController extends ChangeNotifier {
     }
   }
 
-  Future<bool> deleteByPath(String path) async {
-    try {
-      final success = await _repository.deleteMedia(path);
-      if (success) {
-        _libraryMediaList.removeWhere((m) => m.path == path);
-        _homeMediaList.removeWhere((m) => m.path == path);
-        notifyListeners();
-      }
-      return success;
-    } catch (e) {
-      log('Error deleting media: $e');
-      return false;
+  Future<bool> deleteMedia(String path) async {
+    final success = await _service.deleteMedia(path);
+    if (success) {
+      _libraryMediaList.removeWhere((m) => m.path == path);
+      _homeMediaList.removeWhere((m) => m.path == path);
+      notifyListeners();
     }
+    return success;
   }
 
-  Future<bool> rename(Media target, String newName) async {
-    final index = _libraryMediaList.indexWhere((m) => m.path == target.path);
-    if (index == -1) return false;
-
-    final oldMedia = _libraryMediaList[index];
-
-    try {
-      final success = await _repository.renameMedia(oldMedia, newName);
-      if (success) {
-        // Create updated media object
-        final directoryPath = File(oldMedia.path).parent.path;
-        final extension = oldMedia.path.split('.').last;
-        final newPath = '$directoryPath/$newName.$extension';
-
-        FileStat? updatedStat;
-        try {
-          updatedStat = await File(newPath).stat();
-        } catch (e) {
-          updatedStat = await File(oldMedia.path).stat();
-        }
-
-        final updated = Media(
-          path: newPath,
-          duration: oldMedia.duration,
-          size: updatedStat.size,
-          lastModified: updatedStat.modified,
-          type: oldMedia.type,
-        );
-
-        _libraryMediaList[index] = updated;
-        final homeIndex = _homeMediaList.indexWhere(
-          (m) => m.path == target.path,
-        );
-        if (homeIndex != -1) {
-          _homeMediaList[homeIndex] = updated;
-        }
-        notifyListeners();
+  Future<bool> renameMedia(Media media, String newName) async {
+    final updatedMedia = await _service.renameMedia(media, newName);
+    if (updatedMedia != null) {
+      final index = _libraryMediaList.indexWhere((m) => m.path == media.path);
+      if (index != -1) {
+        _libraryMediaList[index] = updatedMedia;
       }
-      return success;
-    } catch (e) {
-      log('Error renaming media: $e');
-      return false;
+      final homeIndex = _homeMediaList.indexWhere((m) => m.path == media.path);
+      if (homeIndex != -1) {
+        _homeMediaList[homeIndex] = updatedMedia;
+      }
+      notifyListeners();
+      return true;
     }
+    return false;
   }
 
-  Future<bool> share(String path) async {
-    try {
-      return await _repository.shareMedia(path);
-    } catch (e) {
-      log('Error sharing media: $e');
-      return false;
-    }
+  Future<bool> shareMedia(String path) async {
+    return await _service.shareMedia(path);
   }
 
   void sortToggleByLastModified() {
@@ -136,14 +95,14 @@ class MediaController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> scanLibrary() async {
+  Future<void> scanDeviceDirectory() async {
     if (_isLibraryScanned || _isScanning) return;
 
     _isScanning = true;
     notifyListeners();
 
     try {
-      final scanned = await _repository.scanAllMedia();
+      final scanned = await _service.scanDeviceDirectory();
       _libraryMediaList = scanned;
       _isLibraryScanned = true;
     } catch (e) {
@@ -164,18 +123,18 @@ class MediaController extends ChangeNotifier {
       if (!context.mounted) return null;
       final confirmed = await showDeleteMediaDialog(context, media);
       if (confirmed == true) {
-        final success = await deleteByPath(media.path);
+        final success = await deleteMedia(media.path);
         message = success ? 'Xóa file thành công' : 'Xóa file thất bại';
       }
     } else if (action == 'rename') {
       if (!context.mounted) return null;
       final newName = await showRenameMediaDialog(context, media);
       if (newName != null && newName.isNotEmpty) {
-        final success = await rename(media, newName);
+        final success = await renameMedia(media, newName);
         message = success ? 'Đổi tên thành công' : 'Đổi tên thất bại';
       }
     } else if (action == 'share') {
-      await share(media.path);
+      await shareMedia(media.path);
     }
 
     return message;
