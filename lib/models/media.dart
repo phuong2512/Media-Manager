@@ -17,7 +17,7 @@ class Media {
     return Media(
       path: json["path"],
       duration: json["duration"],
-      size: int.parse(json["size"]),
+      size: json["size"],
       lastModified: DateTime.parse(json["lastModified"]),
       type: json["type"],
     );

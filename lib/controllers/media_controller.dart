@@ -1,7 +1,8 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:media_manager/interfaces/home_media_storage_interface.dart';
 import 'package:media_manager/models/media.dart';
-import 'package:media_manager/interfaces/media_service_interface.dart';
+import 'package:media_manager/interfaces/media_interface.dart';
 import 'package:media_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
 import 'package:media_manager/widgets/dialogs/delete_media_dialog.dart';
 import 'package:media_manager/widgets/dialogs/rename_media_dialog.dart';
@@ -9,13 +10,19 @@ import 'package:media_manager/widgets/dialogs/rename_media_dialog.dart';
 enum SortOrder { none, newestFirst, oldestFirst }
 
 class MediaController extends ChangeNotifier {
-  final MediaServiceInterface _service;
+  final MediaInterface _mediaService;
+  final HomeMediaStorageInterface _homeStorageService;
 
-  MediaController({required MediaServiceInterface service}) : _service = service {
+  MediaController({
+    required MediaInterface mediaService,
+    required HomeMediaStorageInterface homeStorageService,
+  }) : _mediaService = mediaService,
+       _homeStorageService = homeStorageService {
     _libraryMediaList = [];
     _homeMediaList = [];
     _isLibraryScanned = false;
     _sortOrder = SortOrder.none;
+    _loadHomeMediaFromStorage();
   }
 
   SortOrder _sortOrder = SortOrder.none;
@@ -33,11 +40,39 @@ class MediaController extends ChangeNotifier {
   bool _isScanning = false;
   bool get isScanning => _isScanning;
 
+  bool _isLoadingHomeMedia = true;
+  bool get isLoadingHomeMedia => _isLoadingHomeMedia;
+
   List<Media> get audioList =>
       _homeMediaList.where((media) => media.type == "Audio").toList();
 
   List<Media> get videoList =>
       _homeMediaList.where((media) => media.type == "Video").toList();
+
+  Future<void> _loadHomeMediaFromStorage() async {
+    try {
+      _isLoadingHomeMedia = true;
+      notifyListeners();
+
+      final savedMedia = await _homeStorageService.loadHomeMediaList();
+      _homeMediaList = savedMedia;
+
+      _isLoadingHomeMedia = false;
+      notifyListeners();
+    } catch (e) {
+      log('Error loading home media from storage: $e');
+      _isLoadingHomeMedia = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _saveHomeMediaToStorage() async {
+    try {
+      await _homeStorageService.saveHomeMediaList(_homeMediaList);
+    } catch (e) {
+      log('Error saving home media to storage: $e');
+    }
+  }
 
   List<Media> filteredLibrary({required String type, required String query}) {
     final lowered = query.toLowerCase();
@@ -52,22 +87,24 @@ class MediaController extends ChangeNotifier {
     final isExists = _homeMediaList.any((m) => m.path == media.path);
     if (!isExists) {
       _homeMediaList.add(media);
+      _saveHomeMediaToStorage();
       notifyListeners();
     }
   }
 
   Future<bool> deleteMedia(String path) async {
-    final success = await _service.deleteMedia(path);
+    final success = await _mediaService.deleteMedia(path);
     if (success) {
       _libraryMediaList.removeWhere((m) => m.path == path);
       _homeMediaList.removeWhere((m) => m.path == path);
+      _saveHomeMediaToStorage();
       notifyListeners();
     }
     return success;
   }
 
   Future<bool> renameMedia(Media media, String newName) async {
-    final updatedMedia = await _service.renameMedia(media, newName);
+    final updatedMedia = await _mediaService.renameMedia(media, newName);
     if (updatedMedia != null) {
       final index = _libraryMediaList.indexWhere((m) => m.path == media.path);
       if (index != -1) {
@@ -76,6 +113,7 @@ class MediaController extends ChangeNotifier {
       final homeIndex = _homeMediaList.indexWhere((m) => m.path == media.path);
       if (homeIndex != -1) {
         _homeMediaList[homeIndex] = updatedMedia;
+        _saveHomeMediaToStorage();
       }
       notifyListeners();
       return true;
@@ -84,7 +122,7 @@ class MediaController extends ChangeNotifier {
   }
 
   Future<bool> shareMedia(String path) async {
-    return await _service.shareMedia(path);
+    return await _mediaService.shareMedia(path);
   }
 
   void sortToggleByLastModified(SortOrder order) {
@@ -104,7 +142,7 @@ class MediaController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final scanned = await _service.scanDeviceDirectory();
+      final scanned = await _mediaService.scanDeviceDirectory();
       _libraryMediaList = scanned;
       _isLibraryScanned = true;
       if (_sortOrder != SortOrder.none) {

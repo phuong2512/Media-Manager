@@ -1,12 +1,12 @@
 import 'dart:developer';
 import 'dart:io';
-import 'package:media_manager/interfaces/media_service_interface.dart';
+import 'package:media_manager/interfaces/media_interface.dart';
 import 'package:media_manager/models/media.dart';
 import 'package:media_manager/services/media_scanner_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 
-class MediaService implements MediaServiceInterface {
+class MediaService implements MediaInterface {
   final MediaScannerService _scanner;
 
   MediaService({required MediaScannerService scanner}) : _scanner = scanner;

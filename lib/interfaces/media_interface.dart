@@ -1,6 +1,6 @@
 import 'package:media_manager/models/media.dart';
 
-abstract class MediaServiceInterface {
+abstract class MediaInterface {
   Future<bool> checkPermissions();
 
   Future<bool> deleteMedia(String path);
