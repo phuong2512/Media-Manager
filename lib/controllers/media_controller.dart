@@ -92,6 +92,14 @@ class MediaController extends ChangeNotifier {
     }
   }
 
+  void clearHomeMediaList() async {
+    if (_homeMediaList.isEmpty) return;
+    if (await _homeStorageService.clearHomeMediaList() == true) {
+      _homeMediaList.clear();
+      notifyListeners();
+    }
+  }
+
   Future<bool> deleteMedia(String path) async {
     final success = await _mediaService.deleteMedia(path);
     if (success) {

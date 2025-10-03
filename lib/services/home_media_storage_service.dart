@@ -51,4 +51,15 @@ class HomeMediaStorageService implements HomeMediaStorageInterface {
       return [];
     }
   }
+
+  @override
+  Future<bool> clearHomeMediaList() async {
+    try {
+      await _prefs.remove('homeMediaList');
+      return true;
+    } catch (e) {
+      debugPrint('Error clearing home media list: $e');
+      return false;
+    }
+  }
 }

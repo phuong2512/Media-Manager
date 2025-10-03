@@ -17,14 +17,28 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<MediaController>();
-    final audioList = controller.audioList;
-    final videoList = controller.videoList;
+    final homeAudioList = controller.audioList;
+    final homeVideoList = controller.videoList;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Media Loader'),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Settings'),
+                  content: ElevatedButton(
+                    onPressed: () {
+                      controller.clearHomeMediaList();
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Delete Home Media List'),
+                  ),
+                ),
+              );
+            },
             icon: const Icon(Icons.settings, color: AppColors.iconPrimary),
           ),
         ],
@@ -36,9 +50,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _homeMediaListTile("Audio", audioList),
+                _homeMediaListTile("Audio", homeAudioList),
                 const SizedBox(height: 10),
-                _homeMediaListTile("Video", videoList),
+                _homeMediaListTile("Video", homeVideoList),
               ],
             ),
           ),
@@ -88,9 +102,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final message = await controller.handleMediaOptions(context, media);
 
     if (message != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
@@ -115,7 +129,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       Icons.play_circle_outline,
                       color: AppColors.iconAudio,
                     )
-                  : const Icon(Icons.ondemand_video, color: AppColors.iconVideo),
+                  : const Icon(
+                      Icons.ondemand_video,
+                      color: AppColors.iconVideo,
+                    ),
               title: Text(
                 media.path.split('/').last.split('.').first,
                 maxLines: 1,
