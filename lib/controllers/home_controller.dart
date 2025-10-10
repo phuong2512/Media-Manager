@@ -1,51 +1,29 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:media_manager/interfaces/home_media_storage_interface.dart';
 import 'package:media_manager/models/media.dart';
-import 'package:media_manager/interfaces/media_interface.dart';
+import 'package:media_manager/repositories/media_repository.dart';
 import 'package:media_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
 import 'package:media_manager/widgets/dialogs/delete_media_dialog.dart';
 import 'package:media_manager/widgets/dialogs/rename_media_dialog.dart';
 
-enum SortOrder { none, newestFirst, oldestFirst }
+class HomeController extends ChangeNotifier {
+  final MediaRepository _repository;
 
-class MediaController extends ChangeNotifier {
-  final MediaInterface _mediaService;
-  final HomeMediaStorageInterface _homeStorageService;
-
-  MediaController({
-    required MediaInterface mediaService,
-    required HomeMediaStorageInterface homeStorageService,
-  }) : _mediaService = mediaService,
-       _homeStorageService = homeStorageService {
-    _libraryMediaList = [];
+  HomeController({required MediaRepository repository})
+    : _repository = repository {
     _homeMediaList = [];
-    _isLibraryScanned = false;
-    _sortOrder = SortOrder.none;
+    _isLoadingHomeMedia = true;
     _loadHomeMediaFromStorage();
   }
 
-  SortOrder _sortOrder = SortOrder.none;
-  SortOrder get sortOrder => _sortOrder;
-
-  late List<Media> _libraryMediaList;
-  List<Media> get libraryMediaList => _libraryMediaList;
-
   late List<Media> _homeMediaList;
   List<Media> get homeMediaList => _homeMediaList;
-
-  bool _isLibraryScanned = false;
-  bool get isLibraryScanned => _isLibraryScanned;
-
-  bool _isScanning = false;
-  bool get isScanning => _isScanning;
 
   bool _isLoadingHomeMedia = true;
   bool get isLoadingHomeMedia => _isLoadingHomeMedia;
 
   List<Media> get audioList =>
       _homeMediaList.where((media) => media.type == "Audio").toList();
-
   List<Media> get videoList =>
       _homeMediaList.where((media) => media.type == "Video").toList();
 
@@ -54,9 +32,8 @@ class MediaController extends ChangeNotifier {
       _isLoadingHomeMedia = true;
       notifyListeners();
 
-      final savedMedia = await _homeStorageService.loadHomeMediaList();
+      final savedMedia = await _repository.loadHomeMediaList();
       _homeMediaList = savedMedia;
-
       _isLoadingHomeMedia = false;
       notifyListeners();
     } catch (e) {
@@ -68,19 +45,10 @@ class MediaController extends ChangeNotifier {
 
   Future<void> _saveHomeMediaToStorage() async {
     try {
-      await _homeStorageService.saveHomeMediaList(_homeMediaList);
+      await _repository.saveHomeMediaList(_homeMediaList);
     } catch (e) {
       log('Error saving home media to storage: $e');
     }
-  }
-
-  List<Media> filteredLibrary({required String type, required String query}) {
-    final lowered = query.toLowerCase();
-    return _libraryMediaList.where((media) {
-      final isType = media.type == type;
-      final name = media.path.split('/').last.split('.').first.toLowerCase();
-      return isType && name.contains(lowered);
-    }).toList();
   }
 
   void addToHome(Media media) {
@@ -92,18 +60,17 @@ class MediaController extends ChangeNotifier {
     }
   }
 
-  void clearHomeMediaList() async {
+  Future<void> clearHomeMediaList() async {
     if (_homeMediaList.isEmpty) return;
-    if (await _homeStorageService.clearHomeMediaList() == true) {
+    if (await _repository.clearHomeMediaList() == true) {
       _homeMediaList.clear();
       notifyListeners();
     }
   }
 
   Future<bool> deleteMedia(String path) async {
-    final success = await _mediaService.deleteMedia(path);
+    final success = await _repository.deleteMedia(path);
     if (success) {
-      _libraryMediaList.removeWhere((m) => m.path == path);
       _homeMediaList.removeWhere((m) => m.path == path);
       _saveHomeMediaToStorage();
       notifyListeners();
@@ -112,12 +79,8 @@ class MediaController extends ChangeNotifier {
   }
 
   Future<bool> renameMedia(Media media, String newName) async {
-    final updatedMedia = await _mediaService.renameMedia(media, newName);
+    final updatedMedia = await _repository.renameMedia(media, newName);
     if (updatedMedia != null) {
-      final index = _libraryMediaList.indexWhere((m) => m.path == media.path);
-      if (index != -1) {
-        _libraryMediaList[index] = updatedMedia;
-      }
       final homeIndex = _homeMediaList.indexWhere((m) => m.path == media.path);
       if (homeIndex != -1) {
         _homeMediaList[homeIndex] = updatedMedia;
@@ -130,36 +93,20 @@ class MediaController extends ChangeNotifier {
   }
 
   Future<bool> shareMedia(String path) async {
-    return await _mediaService.shareMedia(path);
+    return await _repository.shareMedia(path);
   }
 
-  void sortToggleByLastModified(SortOrder order) {
-    if (order == SortOrder.none) return;
-    _sortOrder = order;
-    _libraryMediaList.sort(
-      (a, b) => order == SortOrder.newestFirst
-          ? a.lastModified.compareTo(b.lastModified)
-          : b.lastModified.compareTo(a.lastModified),
-    );
+  Future<void> syncDeleteMedia(String path) async {
+    _homeMediaList.removeWhere((m) => m.path == path);
+    await _saveHomeMediaToStorage();
     notifyListeners();
   }
 
-  Future<void> scanDeviceDirectory() async {
-    if (_isLibraryScanned || _isScanning) return;
-    _isScanning = true;
-    notifyListeners();
-
-    try {
-      final scanned = await _mediaService.scanDeviceDirectory();
-      _libraryMediaList = scanned;
-      _isLibraryScanned = true;
-      if (_sortOrder != SortOrder.none) {
-        sortToggleByLastModified(_sortOrder);
-      }
-    } catch (e) {
-      log('Error scanning library: $e');
-    } finally {
-      _isScanning = false;
+  Future<void> syncRenameMedia(Media oldMedia, Media newMedia) async {
+    final index = _homeMediaList.indexWhere((m) => m.path == oldMedia.path);
+    if (index != -1) {
+      _homeMediaList[index] = newMedia;
+      await _saveHomeMediaToStorage();
       notifyListeners();
     }
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
-import 'package:media_manager/controllers/media_controller.dart';
+import 'package:media_manager/controllers/home_controller.dart';
 import 'package:media_manager/utils/app_colors.dart';
 import 'package:media_manager/di/locator.dart';
 import 'package:provider/provider.dart';
@@ -18,37 +18,34 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<MediaController>(
-      create: (_) => getIt<MediaController>(),
-      child: MaterialApp(
-        title: 'Media Manager',
-        theme: ThemeData(
-          dialogTheme: DialogThemeData(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            backgroundColor: AppColors.background,
-            titleTextStyle: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-            ),
+    return MaterialApp(
+      title: 'Media Manager',
+      theme: ThemeData(
+        dialogTheme: DialogThemeData(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-          listTileTheme: ListTileThemeData(
-            subtitleTextStyle: TextStyle(color: Colors.white30),
-          ),
-          scaffoldBackgroundColor: AppColors.background,
-          appBarTheme: AppBarTheme(
-            centerTitle: true,
-            backgroundColor: AppColors.background,
-            titleTextStyle: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-              color: Colors.white,
-            ),
+          backgroundColor: AppColors.background,
+          titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
+        ),
+        listTileTheme: ListTileThemeData(
+          subtitleTextStyle: TextStyle(color: Colors.white30),
+        ),
+        scaffoldBackgroundColor: AppColors.background,
+        appBarTheme: AppBarTheme(
+          centerTitle: true,
+          backgroundColor: AppColors.background,
+          titleTextStyle: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: Colors.white,
           ),
         ),
-        debugShowCheckedModeBanner: false,
-        home: const HomeScreen(),
+      ),
+      debugShowCheckedModeBanner: false,
+      home: ChangeNotifierProvider(
+        create: (_) => getIt<HomeController>(),
+        child: const HomeScreen(),
       ),
     );
   }

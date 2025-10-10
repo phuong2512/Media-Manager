@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:media_manager/controllers/media_controller.dart';
+import 'package:media_manager/controllers/media_list_controller.dart';
 import 'package:media_manager/utils/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:media_manager/models/media.dart';
 import 'package:media_manager/views/load_media/audio_tab.dart';
 import 'package:media_manager/views/load_media/video_tab.dart';
 
-class LoadMediaScreen extends StatefulWidget {
-  const LoadMediaScreen({super.key});
+class MediaListScreen extends StatefulWidget {
+  const MediaListScreen({super.key});
 
   @override
-  State<LoadMediaScreen> createState() => _LoadMediaScreenState();
+  State<MediaListScreen> createState() => _MediaListScreenState();
 }
 
-class _LoadMediaScreenState extends State<LoadMediaScreen> {
+class _MediaListScreenState extends State<MediaListScreen> {
   int selectedTabIndex = 0;
   String searchMedia = '';
   final TextEditingController _searchController = TextEditingController();
@@ -25,7 +25,7 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
   }
 
   Future<void> _loadMediaLibrary() async {
-    final controller = context.read<MediaController>();
+    final controller = context.read<MediaListController>();
     if (!controller.isLibraryScanned && !controller.isScanning) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await controller.scanDeviceDirectory();
@@ -40,7 +40,7 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
   }
 
   void _handleMediaOptions(Media media) async {
-    final controller = context.read<MediaController>();
+    final controller = context.read<MediaListController>();
     final message = await controller.handleMediaOptions(context, media);
 
     if (message != null && mounted) {
@@ -52,7 +52,7 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.watch<MediaController>();
+    final controller = context.watch<MediaListController>();
     final isLoading = controller.isScanning;
 
     return isLoading
@@ -79,7 +79,10 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
                   onPressed: () => Navigator.pop(context),
                   child: const Text(
                     "Cancel",
-                    style: TextStyle(color: AppColors.textPrimary, fontSize: 15),
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 15,
+                    ),
                   ),
                 ),
               ),
@@ -125,7 +128,6 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
                           color: AppColors.textSecondary,
                         ),
                         suffixIcon: IconButton(
-
                           onPressed: () {},
                           icon: const Icon(
                             Icons.mic,
@@ -198,7 +200,7 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
   }
 
   void _showSortOptionsDialog(BuildContext context) {
-    final controller = context.read<MediaController>();
+    final controller = context.read<MediaListController>();
     showDialog(
       context: context,
       builder: (context) {

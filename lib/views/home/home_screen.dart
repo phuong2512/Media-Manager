@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:media_manager/controllers/media_controller.dart';
+import 'package:media_manager/controllers/home_controller.dart';
+import 'package:media_manager/controllers/media_list_controller.dart';
+import 'package:media_manager/di/locator.dart';
 import 'package:media_manager/utils/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:media_manager/models/media.dart';
-import 'package:media_manager/views/load_media/load_media_screen.dart';
+import 'package:media_manager/views/load_media/media_list_screen.dart';
 import 'package:media_manager/utils/format.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -15,8 +17,18 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final controller = context.watch<MediaController>();
+    final controller = context.watch<HomeController>();
     final homeAudioList = controller.audioList;
     final homeVideoList = controller.videoList;
     return Scaffold(
@@ -51,8 +63,14 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Drum Removal', style: TextStyle(fontSize: 30,fontWeight: FontWeight.bold, color: Colors.white),),
-
+                Text(
+                  'Drum Removal',
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
                 _homeMediaListTile("Audio", homeAudioList),
                 const SizedBox(height: 10),
                 _homeMediaListTile("Video", homeVideoList),
@@ -97,17 +115,20 @@ class _HomeScreenState extends State<HomeScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
-      builder: (context) => const LoadMediaScreen(),
+      builder: (context) => ChangeNotifierProvider(
+        create: (_) => getIt<MediaListController>(),
+        child: const MediaListScreen(),
+      ),
     );
 
     if (result != null && result is Media) {
       if (!mounted) return;
-      context.read<MediaController>().addToHome(result);
+      context.read<HomeController>().addToHome(result);
     }
   }
 
   void _handleMediaOptions(Media media) async {
-    final controller = context.read<MediaController>();
+    final controller = context.read<HomeController>();
     final message = await controller.handleMediaOptions(context, media);
 
     if (message != null && mounted) {
