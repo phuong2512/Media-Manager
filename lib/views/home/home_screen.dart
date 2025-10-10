@@ -20,8 +20,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final homeAudioList = controller.audioList;
     final homeVideoList = controller.videoList;
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Media Loader'),
+        backgroundColor: Colors.black,
         actions: [
           IconButton(
             onPressed: () {
@@ -39,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               );
             },
-            icon: const Icon(Icons.settings, color: AppColors.iconPrimary),
+            icon: const Icon(Icons.settings_outlined, color: Colors.white),
           ),
         ],
       ),
@@ -50,6 +51,8 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('Drum Removal', style: TextStyle(fontSize: 30,fontWeight: FontWeight.bold, color: Colors.white),),
+
                 _homeMediaListTile("Audio", homeAudioList),
                 const SizedBox(height: 10),
                 _homeMediaListTile("Video", homeVideoList),
@@ -78,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         child: IconButton(
-          icon: const Icon(Icons.add, color: Colors.white),
+          icon: const Icon(Icons.add, size: 35, color: Colors.white),
           onPressed: _addMediaToHome,
         ),
       ),
@@ -86,9 +89,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _addMediaToHome() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const LoadMediaScreen()),
+    final result = await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      clipBehavior: Clip.antiAlias,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) => const LoadMediaScreen(),
     );
 
     if (result != null && result is Media) {
@@ -112,6 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SizedBox(height: 10),
         Text(
           mediaType,
           style: const TextStyle(fontSize: 15, color: Colors.white60),

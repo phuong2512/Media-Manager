@@ -57,7 +57,7 @@ class RenameMediaDialog extends StatelessWidget {
                 onPressed: () => Navigator.pop(context),
                 child: const Text(
                   'Cancel',
-                  style: TextStyle(color: Colors.white, fontSize: 15),
+                  style: TextStyle(color: Colors.white70, fontSize: 16),
                 ),
               ),
             ),
@@ -71,12 +71,12 @@ class RenameMediaDialog extends StatelessWidget {
                   }
                 },
                 style: TextButton.styleFrom(
-                  backgroundColor: Colors.cyan,
+                  backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
                 ),
                 child: const Text(
                   'OK',
-                  style: TextStyle(color: Colors.white, fontSize: 15),
+                  style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
             ),

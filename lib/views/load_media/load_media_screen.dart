@@ -56,43 +56,40 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
     final isLoading = controller.isScanning;
 
     return isLoading
-        ? Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(color: Colors.cyan),
-                  SizedBox(height: 10),
-                  Text('Loading', style: TextStyle(color: Colors.white60)),
-                ],
+        ? SafeArea(
+            bottom: false,
+            child: Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(color: Colors.cyan),
+                    SizedBox(height: 10),
+                    Text('Loading', style: TextStyle(color: Colors.white60)),
+                  ],
+                ),
               ),
             ),
           )
         : Scaffold(
             appBar: AppBar(
-              actions: [
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.settings,
-                    color: AppColors.iconPrimary,
+              leading: Padding(
+                padding: const EdgeInsets.only(left: 25),
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: AppColors.textPrimary, fontSize: 15),
                   ),
                 ),
-              ],
-              leading: TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  "Cancel",
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 15),
-                ),
               ),
-              leadingWidth: 75,
+              leadingWidth: 100,
               title: Container(
                 decoration: BoxDecoration(
                   color: Colors.black,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                padding: const EdgeInsets.all(3),
+                padding: const EdgeInsets.all(2),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -107,7 +104,7 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    padding: const EdgeInsets.symmetric(horizontal: 35),
                     child: TextField(
                       style: const TextStyle(color: AppColors.textSecondary),
                       cursorColor: AppColors.textSecondary,
@@ -123,20 +120,23 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
                           color: AppColors.textSecondary,
                         ),
                         prefixIcon: const Icon(
+                          size: 30,
                           Icons.search,
                           color: AppColors.textSecondary,
                         ),
                         suffixIcon: IconButton(
+
                           onPressed: () {},
                           icon: const Icon(
                             Icons.mic,
                             color: AppColors.textSecondary,
                           ),
                         ),
+                        contentPadding: EdgeInsets.zero,
                         filled: true,
                         fillColor: AppColors.fill,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(25),
+                          borderRadius: BorderRadius.circular(15),
                           borderSide: BorderSide.none,
                         ),
                       ),
@@ -183,7 +183,7 @@ class _LoadMediaScreenState extends State<LoadMediaScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.fill : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
           label,

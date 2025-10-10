@@ -17,7 +17,7 @@ class DeleteMediaDialog extends StatelessWidget {
           Text(
             "If you continue, this file will be deleted, and you won't be able to access it later",
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white, fontSize: 15),
+            style: TextStyle(color: Colors.white60, fontSize: 16),
           ),
         ],
       ),
@@ -39,7 +39,7 @@ class DeleteMediaDialog extends StatelessWidget {
                 onPressed: () => Navigator.pop(context),
                 child: const Text(
                   'Cancel',
-                  style: TextStyle(color: Colors.white, fontSize: 15),
+                  style: TextStyle(color: Colors.white70, fontSize: 16),
                 ),
               ),
             ),
@@ -50,12 +50,12 @@ class DeleteMediaDialog extends StatelessWidget {
                   Navigator.pop(context, true);
                 },
                 style: TextButton.styleFrom(
-                  backgroundColor: Colors.cyan,
+                  backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
                 ),
                 child: const Text(
                   'Delete',
-                  style: TextStyle(color: Colors.white, fontSize: 15),
+                  style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
             ),

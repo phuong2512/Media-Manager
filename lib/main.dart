@@ -31,7 +31,6 @@ class MyApp extends StatelessWidget {
             titleTextStyle: TextStyle(
               color: Colors.white,
               fontSize: 20,
-              fontWeight: FontWeight.bold,
             ),
           ),
           listTileTheme: ListTileThemeData(
