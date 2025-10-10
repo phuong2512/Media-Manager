@@ -3,6 +3,7 @@ import 'package:media_manager/controllers/home_controller.dart';
 import 'package:media_manager/controllers/media_list_controller.dart';
 import 'package:media_manager/di/locator.dart';
 import 'package:media_manager/utils/app_colors.dart';
+import 'package:media_manager/widgets/dialogs/media_player_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:media_manager/models/media.dart';
 import 'package:media_manager/views/load_media/media_list_screen.dart';
@@ -17,20 +18,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final controller = context.watch<HomeController>();
     final homeAudioList = controller.audioList;
     final homeVideoList = controller.videoList;
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -63,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Drum Removal',
                   style: TextStyle(
                     fontSize: 30,
@@ -138,6 +130,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _playMedia(Media media) {
+    showMediaPlayerDialog(context, media);
+  }
+
   Widget _homeMediaListTile(String mediaType, List mediaList) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,6 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
               subtitle: Text(
                 "${formatBytes(media.size)} | ${media.duration} | ${media.path.split('.').last}",
               ),
+              onTap: () => _playMedia(media),
               onLongPress: () => _handleMediaOptions(media),
               trailing: IconButton(
                 onPressed: () => _handleMediaOptions(media),
