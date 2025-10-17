@@ -1,16 +1,21 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:media_manager/models/media.dart';
+import 'package:media_manager/repositories/home_repository.dart';
 import 'package:media_manager/repositories/media_repository.dart';
 import 'package:media_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
 import 'package:media_manager/widgets/dialogs/delete_media_dialog.dart';
 import 'package:media_manager/widgets/dialogs/rename_media_dialog.dart';
 
 class HomeController extends ChangeNotifier {
-  final MediaRepository _repository;
+  final MediaRepository _mediaRepository;
+  final HomeRepository _homeRepository;
 
-  HomeController({required MediaRepository repository})
-    : _repository = repository {
+  HomeController({
+    required HomeRepository homeRepository,
+    required MediaRepository repository,
+  }) : _mediaRepository = repository,
+       _homeRepository = homeRepository {
     _homeMediaList = [];
     _isLoadingHomeMedia = true;
     _loadHomeMediaFromStorage();
@@ -32,7 +37,7 @@ class HomeController extends ChangeNotifier {
       _isLoadingHomeMedia = true;
       notifyListeners();
 
-      final savedMedia = await _repository.loadHomeMediaList();
+      final savedMedia = await _homeRepository.loadHomeMediaList();
       _homeMediaList = savedMedia;
       _isLoadingHomeMedia = false;
       notifyListeners();
@@ -45,7 +50,7 @@ class HomeController extends ChangeNotifier {
 
   Future<void> _saveHomeMediaToStorage() async {
     try {
-      await _repository.saveHomeMediaList(_homeMediaList);
+      await _homeRepository.saveHomeMediaList(_homeMediaList);
     } catch (e) {
       log('Error saving home media to storage: $e');
     }
@@ -62,14 +67,14 @@ class HomeController extends ChangeNotifier {
 
   Future<void> clearHomeMediaList() async {
     if (_homeMediaList.isEmpty) return;
-    if (await _repository.clearHomeMediaList() == true) {
+    if (await _homeRepository.clearHomeMediaList() == true) {
       _homeMediaList.clear();
       notifyListeners();
     }
   }
 
   Future<bool> deleteMedia(String path) async {
-    final success = await _repository.deleteMedia(path);
+    final success = await _mediaRepository.deleteMedia(path);
     if (success) {
       _homeMediaList.removeWhere((m) => m.path == path);
       _saveHomeMediaToStorage();
@@ -79,7 +84,7 @@ class HomeController extends ChangeNotifier {
   }
 
   Future<bool> renameMedia(Media media, String newName) async {
-    final updatedMedia = await _repository.renameMedia(media, newName);
+    final updatedMedia = await _mediaRepository.renameMedia(media, newName);
     if (updatedMedia != null) {
       final homeIndex = _homeMediaList.indexWhere((m) => m.path == media.path);
       if (homeIndex != -1) {
@@ -93,7 +98,7 @@ class HomeController extends ChangeNotifier {
   }
 
   Future<bool> shareMedia(String path) async {
-    return await _repository.shareMedia(path);
+    return await _mediaRepository.shareMedia(path);
   }
 
   Future<void> syncDeleteMedia(String path) async {

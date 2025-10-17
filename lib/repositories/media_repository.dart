@@ -1,28 +1,11 @@
 import 'package:media_manager/interfaces/media_interface.dart';
-import 'package:media_manager/interfaces/home_media_storage_interface.dart';
 import 'package:media_manager/models/media.dart';
 
 class MediaRepository {
   final MediaInterface _mediaService;
-  final HomeMediaStorageInterface _homeStorageService;
 
-  MediaRepository({
-    required MediaInterface mediaService,
-    required HomeMediaStorageInterface homeStorageService,
-  }) : _mediaService = mediaService,
-       _homeStorageService = homeStorageService;
-
-  Future<List<Media>> loadHomeMediaList() async {
-    return await _homeStorageService.loadHomeMediaList();
-  }
-
-  Future<bool> saveHomeMediaList(List<Media> mediaList) async {
-    return await _homeStorageService.saveHomeMediaList(mediaList);
-  }
-
-  Future<bool> clearHomeMediaList() async {
-    return await _homeStorageService.clearHomeMediaList();
-  }
+  MediaRepository({required MediaInterface mediaService})
+    : _mediaService = mediaService;
 
   Future<List<Media>> scanDeviceDirectory() async {
     return await _mediaService.scanDeviceDirectory();

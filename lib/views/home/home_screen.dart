@@ -9,14 +9,9 @@ import 'package:media_manager/models/media.dart';
 import 'package:media_manager/views/load_media/media_list_screen.dart';
 import 'package:media_manager/utils/format.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<HomeController>();
@@ -92,13 +87,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: IconButton(
           icon: const Icon(Icons.add, size: 35, color: Colors.white),
-          onPressed: _addMediaToHome,
+          onPressed: () => _addMediaToHome(context),
         ),
       ),
     );
   }
 
-  void _addMediaToHome() async {
+  void _addMediaToHome(BuildContext context) async {
     final result = await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -114,23 +109,23 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (result != null && result is Media) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       context.read<HomeController>().addToHome(result);
     }
   }
 
-  void _handleMediaOptions(Media media) async {
+  void _handleMediaOptions(Media media, BuildContext context) async {
     final controller = context.read<HomeController>();
     final message = await controller.handleMediaOptions(context, media);
 
-    if (message != null && mounted) {
+    if (message != null && context.mounted) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
-  void _playMedia(Media media) {
+  void _playMedia(Media media, BuildContext context) {
     showMediaPlayerDialog(context, media);
   }
 
@@ -169,10 +164,10 @@ class _HomeScreenState extends State<HomeScreen> {
               subtitle: Text(
                 "${formatBytes(media.size)} | ${media.duration} | ${media.path.split('.').last}",
               ),
-              onTap: () => _playMedia(media),
-              onLongPress: () => _handleMediaOptions(media),
+              onTap: () => _playMedia(media, context),
+              onLongPress: () => _handleMediaOptions(media, context),
               trailing: IconButton(
-                onPressed: () => _handleMediaOptions(media),
+                onPressed: () => _handleMediaOptions(media, context),
                 icon: const Icon(Icons.more_horiz),
                 color: Colors.white,
               ),

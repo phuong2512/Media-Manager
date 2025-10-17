@@ -25,18 +25,15 @@ class MediaPlayerController extends ChangeNotifier {
 
   Future<void> playMedia(app_media.Media media) async {
     try {
-      // Dispose previous player if exists
       await disposePlayer();
 
       _currentMedia = media;
       _player = Player();
 
-      // Create video controller for video files
       if (media.type == "Video") {
         _videoController = VideoController(_player!);
       }
 
-      // Listen to player state
       _player!.stream.playing.listen((playing) {
         _isPlaying = playing;
         notifyListeners();
@@ -52,7 +49,6 @@ class MediaPlayerController extends ChangeNotifier {
         notifyListeners();
       });
 
-      // Open and play media
       await _player!.open(Media(media.path));
       _isInitialized = true;
       notifyListeners();

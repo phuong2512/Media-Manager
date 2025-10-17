@@ -1,11 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:media_manager/interfaces/media_scanner_interface.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:media_manager/models/media.dart';
 import 'package:media_manager/services/duration_service.dart';
 
-class MediaScannerService {
+class MediaScannerService implements MediaScannerInterface {
   static const _audioExtensions = [
     '.mp3',
     '.m4a',
@@ -27,11 +28,12 @@ class MediaScannerService {
 
   MediaScannerService(this._durationService);
 
+  @override
   Future<List<Media>> scanDeviceDirectory() async {
-    final hasPermission = await _requestStoragePermissions();
+    final hasPermission = await requestStoragePermissions();
     if (!hasPermission) return [];
 
-    final roots = await _getCandidateRoots();
+    final roots = await getCandidateRoots();
     final items = <Media>[];
 
     for (final dir in roots) {
@@ -69,7 +71,8 @@ class MediaScannerService {
     return items;
   }
 
-  Future<bool> _requestStoragePermissions() async {
+  @override
+  Future<bool> requestStoragePermissions() async {
     if (await Permission.manageExternalStorage.isGranted) return true;
     final status = await Permission.manageExternalStorage.request();
     if (status.isGranted) return true;
@@ -78,7 +81,8 @@ class MediaScannerService {
     return storageStatus.isGranted;
   }
 
-  Future<List<Directory>> _getCandidateRoots() async {
+  @override
+  Future<List<Directory>> getCandidateRoots() async {
     final result = <Directory>[];
     result.addAll([
       Directory('/storage/emulated/0/Download'),
