@@ -88,8 +88,10 @@ class MediaPlayerController extends ChangeNotifier {
     notifyListeners();
   }
 
+
   @override
   Future<void> dispose() async {
+    log('MediaPlayerController DISPOSE');
     await disposePlayer();
     super.dispose();
   }

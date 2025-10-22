@@ -1,12 +1,10 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:media_manager/controllers/home_controller.dart';
 import 'package:media_manager/models/media.dart';
 import 'package:media_manager/repositories/media_repository.dart';
 import 'package:media_manager/widgets/bottom_sheets/media_options_bottom_sheet.dart';
 import 'package:media_manager/widgets/dialogs/delete_media_dialog.dart';
 import 'package:media_manager/widgets/dialogs/rename_media_dialog.dart';
-import 'package:provider/provider.dart';
 
 enum SortOrder { none, newestFirst, oldestFirst }
 
@@ -41,21 +39,18 @@ class MediaListController extends ChangeNotifier {
     }).toList();
   }
 
-  Future<bool> deleteMedia(String path, BuildContext context) async {
+  Future<bool> deleteMedia(String path) async {
     final success = await _repository.deleteMedia(path);
     if (success) {
       _mediaList.removeWhere((m) => m.path == path);
-      if (!context.mounted) return false;
-      await context.read<HomeController>().syncDeleteMedia(path);
       notifyListeners();
     }
     return success;
   }
 
-  Future<bool> renameMedia(
+  Future<Media?> renameMedia(
     Media media,
     String newName,
-    BuildContext context,
   ) async {
     final updatedMedia = await _repository.renameMedia(media, newName);
     if (updatedMedia != null) {
@@ -63,12 +58,9 @@ class MediaListController extends ChangeNotifier {
       if (index != -1) {
         _mediaList[index] = updatedMedia;
       }
-      if (!context.mounted) return false;
-      await context.read<HomeController>().syncRenameMedia(media, updatedMedia);
       notifyListeners();
-      return true;
     }
-    return false;
+    return updatedMedia;
   }
 
   Future<bool> shareMedia(String path) async {
@@ -117,7 +109,7 @@ class MediaListController extends ChangeNotifier {
       final confirmed = await showDeleteMediaDialog(context, media);
       if (confirmed == true) {
         if (!context.mounted) return null;
-        final success = await deleteMedia(media.path, context);
+        final success = await deleteMedia(media.path);
         message = success ? 'Xóa file thành công' : 'Xóa file thất bại';
       }
     } else if (action == 'rename') {
@@ -125,13 +117,19 @@ class MediaListController extends ChangeNotifier {
       final newName = await showRenameMediaDialog(context, media);
       if (newName != null && newName.isNotEmpty) {
         if (!context.mounted) return null;
-        final success = await renameMedia(media, newName, context);
-        message = success ? 'Đổi tên thành công' : 'Đổi tên thất bại';
+        final updatedMedia = await renameMedia(media, newName);
+        message = updatedMedia != null  ? 'Đổi tên thành công' : 'Đổi tên thất bại';
       }
     } else if (action == 'share') {
       await shareMedia(media.path);
     }
 
     return message;
+  }
+
+  @override
+  void dispose() {
+    log('MediaListController DISPOSE');
+    super.dispose();
   }
 }

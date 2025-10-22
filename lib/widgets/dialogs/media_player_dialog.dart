@@ -1,31 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:media_manager/controllers/media_player_controller.dart';
+import 'package:media_manager/di/locator.dart';
 import 'package:media_manager/models/media.dart';
 import 'package:media_manager/utils/app_colors.dart';
 import 'package:provider/provider.dart';
 
 Future<void> showMediaPlayerDialog(BuildContext context, Media media) async {
-  final playerController = context.read<MediaPlayerController>();
-
-  await playerController.playMedia(media);
-
-  if (!context.mounted) return;
-
   await showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (context) => ChangeNotifierProvider.value(
-      value: playerController,
-      child: const MediaPlayerDialog(),
+    builder: (context) => ChangeNotifierProvider(
+      create: (_) => getIt<MediaPlayerController>(),
+      child: MediaPlayerDialog(media: media),
     ),
   );
-
-  await playerController.disposePlayer();
 }
 
-class MediaPlayerDialog extends StatelessWidget {
-  const MediaPlayerDialog({super.key});
+class MediaPlayerDialog extends StatefulWidget {
+  final Media media;
+
+  const MediaPlayerDialog({super.key, required this.media});
+
+  @override
+  State<MediaPlayerDialog> createState() => _MediaPlayerDialogState();
+}
+
+class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<MediaPlayerController>().playMedia(widget.media);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,21 +62,20 @@ class MediaPlayerDialog extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildPlayer(context, controller),
-            _buildControls(controller),
-          ],
-        ),
+        child: !controller.isInitialized
+            ? const Center(child: CircularProgressIndicator(color: Colors.cyan))
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildPlayer(context, controller),
+                  _buildControls(controller),
+                ],
+              ),
       ),
     );
   }
 
-  Widget _buildPlayer(
-    BuildContext context,
-    MediaPlayerController controller,
-  ) {
+  Widget _buildPlayer(BuildContext context, MediaPlayerController controller) {
     return Expanded(
       child: Column(
         children: [
@@ -87,7 +92,9 @@ class MediaPlayerDialog extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
-                    controller.isVideo ? Icons.ondemand_video : Icons.play_circle_outline,
+                    controller.isVideo
+                        ? Icons.ondemand_video
+                        : Icons.play_circle_outline,
                     color: controller.isVideo
                         ? AppColors.iconVideo
                         : AppColors.iconAudio,
@@ -131,7 +138,11 @@ class MediaPlayerDialog extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(child: controller.isVideo ? _buildVideoPlayer(controller) : SizedBox()),
+          Expanded(
+            child: controller.isVideo
+                ? _buildVideoPlayer(controller)
+                : SizedBox(),
+          ),
         ],
       ),
     );

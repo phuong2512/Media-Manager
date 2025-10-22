@@ -1,19 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:media_manager/controllers/media_list_controller.dart';
+import 'package:media_manager/di/locator.dart';
+import 'package:media_manager/views/media_list/provider/media_list_controller.dart';
 import 'package:media_manager/utils/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:media_manager/models/media.dart';
-import 'package:media_manager/views/load_media/audio_tab.dart';
-import 'package:media_manager/views/load_media/video_tab.dart';
+import 'package:media_manager/views/media_list/views/audio_tab.dart';
+import 'package:media_manager/views/media_list/views/video_tab.dart';
 
-class MediaListScreen extends StatefulWidget {
+class MediaListScreen extends StatelessWidget {
   const MediaListScreen({super.key});
-
   @override
-  State<MediaListScreen> createState() => _MediaListScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => getIt<MediaListController>(),
+      child: _MediaListScreenView(),
+    );
+  }
 }
 
-class _MediaListScreenState extends State<MediaListScreen> {
+class _MediaListScreenView extends StatefulWidget {
+  @override
+  State<_MediaListScreenView> createState() => _MediaListScreenViewState();
+}
+
+class _MediaListScreenViewState extends State<_MediaListScreenView> {
   int selectedTabIndex = 0;
   String searchMedia = '';
   final TextEditingController _searchController = TextEditingController();
@@ -53,9 +63,9 @@ class _MediaListScreenState extends State<MediaListScreen> {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<MediaListController>();
-    final isLoading = controller.isScanning;
+    final isScanning = controller.isScanning;
 
-    return isLoading
+    return isScanning
         ? SafeArea(
             bottom: false,
             child: Scaffold(

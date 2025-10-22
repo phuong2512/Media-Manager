@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
-import 'package:media_manager/controllers/home_controller.dart';
-import 'package:media_manager/controllers/media_player_controller.dart';
 import 'package:media_manager/utils/app_colors.dart';
 import 'package:media_manager/di/locator.dart';
-import 'package:provider/provider.dart';
 import 'package:media_manager/views/home/home_screen.dart';
 
 void main() {
@@ -44,13 +41,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       debugShowCheckedModeBanner: false,
-      home: MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => getIt<HomeController>()),
-          ChangeNotifierProvider(create: (_) => getIt<MediaPlayerController>()),
-        ],
-        child: const HomeScreen(),
-      ),
+      home: const HomeScreen(),
     );
   }
 }

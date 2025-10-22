@@ -142,4 +142,10 @@ class HomeController extends ChangeNotifier {
 
     return message;
   }
+
+  @override
+  void dispose() {
+    log('HomeController DISPOSE');
+    super.dispose();
+  }
 }

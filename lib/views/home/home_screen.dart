@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:media_manager/controllers/home_controller.dart';
-import 'package:media_manager/controllers/media_list_controller.dart';
+import 'package:media_manager/views/home/provider/home_controller.dart';
 import 'package:media_manager/di/locator.dart';
 import 'package:media_manager/utils/app_colors.dart';
 import 'package:media_manager/widgets/dialogs/media_player_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:media_manager/models/media.dart';
-import 'package:media_manager/views/load_media/media_list_screen.dart';
+import 'package:media_manager/views/media_list/views/media_list_screen.dart';
 import 'package:media_manager/utils/format.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -14,10 +13,17 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.watch<HomeController>();
-    final homeAudioList = controller.audioList;
-    final homeVideoList = controller.videoList;
+    return ChangeNotifierProvider(
+      create: (_) => getIt<HomeController>(),
+      child: _HomeScreenView(),
+    );
+  }
+}
 
+class _HomeScreenView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.read<HomeController>();
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -43,29 +49,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Drum Removal',
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                _homeMediaListTile("Audio", homeAudioList),
-                const SizedBox(height: 10),
-                _homeMediaListTile("Video", homeVideoList),
-              ],
-            ),
-          ),
-        ),
-      ),
+      body: _HomeBody(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Container(
         width: 56,
@@ -79,7 +63,7 @@ class HomeScreen extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
+              color: Colors.black.withAlpha(77),
               blurRadius: 6,
               offset: const Offset(0, 3),
             ),
@@ -94,6 +78,8 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _addMediaToHome(BuildContext context) async {
+    final homeController = context.read<HomeController>();
+
     final result = await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -102,31 +88,58 @@ class HomeScreen extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
-      builder: (context) => ChangeNotifierProvider(
-        create: (_) => getIt<MediaListController>(),
-        child: const MediaListScreen(),
-      ),
+      builder: (context) => const MediaListScreen(),
     );
 
     if (result != null && result is Media) {
       if (!context.mounted) return;
-      context.read<HomeController>().addToHome(result);
+      homeController.addToHome(result);
     }
   }
+}
 
-  void _handleMediaOptions(Media media, BuildContext context) async {
-    final controller = context.read<HomeController>();
-    final message = await controller.handleMediaOptions(context, media);
+class _HomeBody extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<HomeController>();
+    final isLoading = controller.isLoadingHomeMedia;
+    final homeAudioList = controller.audioList;
+    final homeVideoList = controller.videoList;
 
-    if (message != null && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
-    }
-  }
-
-  void _playMedia(Media media, BuildContext context) {
-    showMediaPlayerDialog(context, media);
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        child: isLoading
+            ? const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(color: Colors.cyan),
+                    SizedBox(height: 10),
+                    Text('Loading', style: TextStyle(color: Colors.white60)),
+                  ],
+                ),
+              )
+            : SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Drum Removal',
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    _homeMediaListTile("Audio", homeAudioList),
+                    const SizedBox(height: 10),
+                    _homeMediaListTile("Video", homeVideoList),
+                  ],
+                ),
+              ),
+      ),
+    );
   }
 
   Widget _homeMediaListTile(String mediaType, List mediaList) {
@@ -176,5 +189,20 @@ class HomeScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  void _handleMediaOptions(Media media, BuildContext context) async {
+    final controller = context.read<HomeController>();
+    final message = await controller.handleMediaOptions(context, media);
+
+    if (message != null && context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  void _playMedia(Media media, BuildContext context) {
+    showMediaPlayerDialog(context, media);
   }
 }

@@ -1,6 +1,6 @@
 import 'package:get_it/get_it.dart';
-import 'package:media_manager/controllers/home_controller.dart';
-import 'package:media_manager/controllers/media_list_controller.dart';
+import 'package:media_manager/views/home/provider/home_controller.dart';
+import 'package:media_manager/views/media_list/provider/media_list_controller.dart';
 import 'package:media_manager/controllers/media_player_controller.dart';
 import 'package:media_manager/interfaces/home_media_storage_interface.dart';
 import 'package:media_manager/interfaces/media_interface.dart';
