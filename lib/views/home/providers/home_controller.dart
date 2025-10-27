@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:media_manager/models/media.dart';
@@ -11,6 +12,9 @@ class HomeController extends ChangeNotifier {
   final MediaRepository _mediaRepository;
   final HomeRepository _homeRepository;
 
+  late final StreamSubscription _deleteSubscription;
+  late final StreamSubscription _renameSubscription;
+
   HomeController({
     required HomeRepository homeRepository,
     required MediaRepository repository,
@@ -19,16 +23,30 @@ class HomeController extends ChangeNotifier {
     _homeMediaList = [];
     _isLoadingHomeMedia = true;
     _loadHomeMediaFromStorage();
+    _deleteSubscription = _mediaRepository.onMediaDeleted.listen((path) {
+      syncDeleteMedia(path);
+    });
+    _renameSubscription = _mediaRepository.onMediaRenamed.listen((eventMap) {
+      final oldMedia = eventMap['old'];
+      final newMedia = eventMap['new'];
+
+      if (oldMedia != null && newMedia != null) {
+        syncRenameMedia(oldMedia, newMedia);
+      }
+    });
   }
 
   late List<Media> _homeMediaList;
+
   List<Media> get homeMediaList => _homeMediaList;
 
   bool _isLoadingHomeMedia = true;
+
   bool get isLoadingHomeMedia => _isLoadingHomeMedia;
 
   List<Media> get audioList =>
       _homeMediaList.where((media) => media.type == "Audio").toList();
+
   List<Media> get videoList =>
       _homeMediaList.where((media) => media.type == "Video").toList();
 
@@ -146,6 +164,8 @@ class HomeController extends ChangeNotifier {
   @override
   void dispose() {
     log('HomeController DISPOSE');
+    _deleteSubscription.cancel();
+    _renameSubscription.cancel();
     super.dispose();
   }
 }

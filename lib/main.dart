@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_manager/utils/app_colors.dart';
 import 'package:media_manager/di/locator.dart';
-import 'package:media_manager/views/home/home_screen.dart';
+import 'package:media_manager/views/home/views/home_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

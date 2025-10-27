@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/di/locator.dart';
-import 'package:media_manager/views/media_list/provider/media_list_controller.dart';
+import 'package:media_manager/views/media_list/providers/media_list_controller.dart';
 import 'package:media_manager/utils/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:media_manager/models/media.dart';

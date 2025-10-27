@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:media_manager/models/media.dart';
@@ -11,23 +12,59 @@ enum SortOrder { none, newestFirst, oldestFirst }
 class MediaListController extends ChangeNotifier {
   final MediaRepository _repository;
 
+  late final StreamSubscription _deleteSubscription;
+  late final StreamSubscription _renameSubscription;
+
   MediaListController({required MediaRepository repository})
     : _repository = repository {
     _mediaList = [];
     _isLibraryScanned = false;
     _sortOrder = SortOrder.none;
+
+    _deleteSubscription = _repository.onMediaDeleted.listen(
+      _handleMediaDeleted,
+    );
+    _renameSubscription = _repository.onMediaRenamed.listen(
+      _handleMediaRenamed,
+    );
+  }
+
+  void _handleMediaDeleted(String path) {
+    final int oldLength = _mediaList.length;
+    _mediaList.removeWhere((m) => m.path == path);
+    final bool didRemove = _mediaList.length < oldLength;
+    if (didRemove) {
+      notifyListeners();
+    }
+  }
+
+  void _handleMediaRenamed(Map<String, Media> eventMap) {
+    final oldMedia = eventMap['old'];
+    final newMedia = eventMap['new'];
+
+    if (oldMedia == null || newMedia == null) return;
+
+    final index = _mediaList.indexWhere((m) => m.path == oldMedia.path);
+    if (index != -1) {
+      _mediaList[index] = newMedia;
+      notifyListeners();
+    }
   }
 
   SortOrder _sortOrder = SortOrder.none;
+
   SortOrder get sortOrder => _sortOrder;
 
   late List<Media> _mediaList;
+
   List<Media> get libraryMediaList => _mediaList;
 
   bool _isLibraryScanned = false;
+
   bool get isLibraryScanned => _isLibraryScanned;
 
   bool _isScanning = false;
+
   bool get isScanning => _isScanning;
 
   List<Media> filteredLibrary({required String type, required String query}) {
@@ -40,27 +77,11 @@ class MediaListController extends ChangeNotifier {
   }
 
   Future<bool> deleteMedia(String path) async {
-    final success = await _repository.deleteMedia(path);
-    if (success) {
-      _mediaList.removeWhere((m) => m.path == path);
-      notifyListeners();
-    }
-    return success;
+    return await _repository.deleteMedia(path);
   }
 
-  Future<Media?> renameMedia(
-    Media media,
-    String newName,
-  ) async {
-    final updatedMedia = await _repository.renameMedia(media, newName);
-    if (updatedMedia != null) {
-      final index = _mediaList.indexWhere((m) => m.path == media.path);
-      if (index != -1) {
-        _mediaList[index] = updatedMedia;
-      }
-      notifyListeners();
-    }
-    return updatedMedia;
+  Future<Media?> renameMedia(Media media, String newName) async {
+    return await _repository.renameMedia(media, newName);
   }
 
   Future<bool> shareMedia(String path) async {
@@ -118,7 +139,9 @@ class MediaListController extends ChangeNotifier {
       if (newName != null && newName.isNotEmpty) {
         if (!context.mounted) return null;
         final updatedMedia = await renameMedia(media, newName);
-        message = updatedMedia != null  ? 'Đổi tên thành công' : 'Đổi tên thất bại';
+        message = updatedMedia != null
+            ? 'Đổi tên thành công'
+            : 'Đổi tên thất bại';
       }
     } else if (action == 'share') {
       await shareMedia(media.path);
@@ -130,6 +153,8 @@ class MediaListController extends ChangeNotifier {
   @override
   void dispose() {
     log('MediaListController DISPOSE');
+    _deleteSubscription.cancel();
+    _renameSubscription.cancel();
     super.dispose();
   }
 }

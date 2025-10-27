@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:media_manager/views/home/provider/home_controller.dart';
+import 'package:media_manager/views/home/providers/home_controller.dart';
 import 'package:media_manager/di/locator.dart';
 import 'package:media_manager/utils/app_colors.dart';
-import 'package:media_manager/widgets/dialogs/media_player_dialog.dart';
+import 'package:media_manager/widgets/dialogs/media_player_dialog/media_player_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:media_manager/models/media.dart';
 import 'package:media_manager/views/media_list/views/media_list_screen.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:media_manager/controllers/media_player_controller.dart';
+import 'package:media_manager/widgets/dialogs/media_player_dialog/media_player_controller.dart';
 import 'package:media_manager/di/locator.dart';
 import 'package:media_manager/models/media.dart';
 import 'package:media_manager/utils/app_colors.dart';
