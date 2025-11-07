@@ -16,32 +16,17 @@ final getIt = GetIt.instance;
 void setupLocator() {
   // Services
   getIt.registerLazySingleton(() => DurationService());
-  getIt.registerLazySingleton(
-    () => MediaScannerService(getIt<DurationService>()),
-  );
-  getIt.registerLazySingleton(
-    () => MediaService(scanner: getIt<MediaScannerService>()),
-  );
+  getIt.registerLazySingleton(() => MediaScannerService(getIt<DurationService>()));
+  getIt.registerLazySingleton(() => MediaService(scanner: getIt<MediaScannerService>()));
   getIt.registerLazySingleton(() => HomeService());
 
   // Repositories
-  getIt.registerLazySingleton<MediaRepository>(
-    () => MediaRepositoryImpl(service: getIt<MediaService>()),
-  );
+  getIt.registerLazySingleton<MediaRepository>(() => MediaRepositoryImpl(service: getIt<MediaService>()));
 
-  getIt.registerLazySingleton<HomeRepository>(
-    () => HomeRepositoryImpl(service: getIt<HomeService>()),
-  );
+  getIt.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl(service: getIt<HomeService>()));
 
   // Controllers
   getIt.registerFactory(() => MediaPlayerController());
-  getIt.registerFactory(
-    () => HomeController(
-      homeRepository: getIt<HomeRepository>(),
-      mediaRepository: getIt<MediaRepository>(),
-    ),
-  );
-  getIt.registerFactory(
-    () => MediaListController(repository: getIt<MediaRepository>()),
-  );
+  getIt.registerFactory(() => HomeController(homeRepository: getIt<HomeRepository>(), mediaRepository: getIt<MediaRepository>()));
+  getIt.registerFactory(() => MediaListController(repository: getIt<MediaRepository>()));
 }

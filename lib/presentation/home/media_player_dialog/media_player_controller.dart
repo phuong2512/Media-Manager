@@ -1,10 +1,17 @@
+import 'dart:async';
 import 'dart:developer';
-import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:media_manager/data/models/media.dart' as app_media;
 
-class MediaPlayerController extends ChangeNotifier {
+class MediaPlayerController {
+  // Streams riêng biệt
+  final StreamController<bool> _isPlayingController;
+  final StreamController<bool> _isInitializedController;
+  final StreamController<Duration> _positionController;
+  final StreamController<Duration> _durationController;
+
+  // Cache giá trị hiện tại
   Player? _player;
   VideoController? _videoController;
   app_media.Media? _currentMedia;
@@ -13,6 +20,24 @@ class MediaPlayerController extends ChangeNotifier {
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
 
+  MediaPlayerController()
+    : _isPlayingController = StreamController<bool>.broadcast(),
+      _isInitializedController = StreamController<bool>.broadcast(),
+      _positionController = StreamController<Duration>.broadcast(),
+      _durationController = StreamController<Duration>.broadcast() {
+    _emitIsPlaying(false);
+    _emitIsInitialized(false);
+    _emitPosition(Duration.zero);
+    _emitDuration(Duration.zero);
+  }
+
+  // Public streams
+  Stream<bool> get isPlayingStream => _isPlayingController.stream;
+  Stream<bool> get isInitializedStream => _isInitializedController.stream;
+  Stream<Duration> get positionStream => _positionController.stream;
+  Stream<Duration> get durationStream => _durationController.stream;
+
+  // Getters đồng bộ
   Player? get player => _player;
   VideoController? get videoController => _videoController;
   app_media.Media? get currentMedia => _currentMedia;
@@ -22,6 +47,34 @@ class MediaPlayerController extends ChangeNotifier {
   Duration get duration => _duration;
   bool get hasMedia => _currentMedia != null;
   bool get isVideo => _currentMedia?.type == "Video";
+
+  void _emitIsPlaying(bool playing) {
+    _isPlaying = playing;
+    if (!_isPlayingController.isClosed) {
+      _isPlayingController.add(playing);
+    }
+  }
+
+  void _emitIsInitialized(bool initialized) {
+    _isInitialized = initialized;
+    if (!_isInitializedController.isClosed) {
+      _isInitializedController.add(initialized);
+    }
+  }
+
+  void _emitPosition(Duration pos) {
+    _position = pos;
+    if (!_positionController.isClosed) {
+      _positionController.add(pos);
+    }
+  }
+
+  void _emitDuration(Duration dur) {
+    _duration = dur;
+    if (!_durationController.isClosed) {
+      _durationController.add(dur);
+    }
+  }
 
   Future<void> playMedia(app_media.Media media) async {
     try {
@@ -35,27 +88,22 @@ class MediaPlayerController extends ChangeNotifier {
       }
 
       _player!.stream.playing.listen((playing) {
-        _isPlaying = playing;
-        notifyListeners();
+        _emitIsPlaying(playing);
       });
 
       _player!.stream.position.listen((position) {
-        _position = position;
-        notifyListeners();
+        _emitPosition(position);
       });
 
       _player!.stream.duration.listen((duration) {
-        _duration = duration;
-        notifyListeners();
+        _emitDuration(duration);
       });
 
       await _player!.open(Media(media.path));
-      _isInitialized = true;
-      notifyListeners();
+      _emitIsInitialized(true);
     } catch (e) {
       log('Error playing media: $e');
-      _isInitialized = false;
-      notifyListeners();
+      _emitIsInitialized(false);
     }
   }
 
@@ -72,8 +120,7 @@ class MediaPlayerController extends ChangeNotifier {
   Future<void> stop() async {
     if (_player == null) return;
     await _player!.stop();
-    _isPlaying = false;
-    notifyListeners();
+    _emitIsPlaying(false);
   }
 
   Future<void> disposePlayer() async {
@@ -81,18 +128,19 @@ class MediaPlayerController extends ChangeNotifier {
     _player = null;
     _videoController = null;
     _currentMedia = null;
-    _isPlaying = false;
-    _isInitialized = false;
-    _position = Duration.zero;
-    _duration = Duration.zero;
-    notifyListeners();
+
+    _emitIsPlaying(false);
+    _emitIsInitialized(false);
+    _emitPosition(Duration.zero);
+    _emitDuration(Duration.zero);
   }
 
-
-  @override
   Future<void> dispose() async {
     log('MediaPlayerController DISPOSE');
     await disposePlayer();
-    super.dispose();
+    _isPlayingController.close();
+    _isInitializedController.close();
+    _positionController.close();
+    _durationController.close();
   }
 }

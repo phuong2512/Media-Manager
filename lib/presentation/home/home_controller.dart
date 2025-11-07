@@ -8,9 +8,17 @@ import 'package:media_manager/presentation/widgets/bottom_sheet/media_options_bo
 import 'package:media_manager/presentation/widgets/dialogs/delete_media_dialog.dart';
 import 'package:media_manager/presentation/widgets/dialogs/rename_media_dialog.dart';
 
-class HomeController extends ChangeNotifier {
+class HomeController {
   final MediaRepository _mediaRepository;
   final HomeRepository _homeRepository;
+
+  // Streams riêng biệt
+  final StreamController<List<Media>> _homeMediaListController;
+  final StreamController<bool> _isLoadingController;
+
+  // Cache giá trị hiện tại
+  List<Media> _homeMediaList = [];
+  bool _isLoadingHomeMedia = true;
 
   late final StreamSubscription _deleteSubscription;
   late final StreamSubscription _renameSubscription;
@@ -18,10 +26,12 @@ class HomeController extends ChangeNotifier {
   HomeController({
     required HomeRepository homeRepository,
     required MediaRepository mediaRepository,
-  })  : _mediaRepository = mediaRepository,
-        _homeRepository = homeRepository {
-    _homeMediaList = [];
-    _isLoadingHomeMedia = true;
+  }) : _mediaRepository = mediaRepository,
+       _homeRepository = homeRepository,
+       _homeMediaListController = StreamController<List<Media>>.broadcast(),
+       _isLoadingController = StreamController<bool>.broadcast() {
+    _emitHomeMediaList([]);
+    _emitIsLoading(true);
 
     _loadHomeMediaFromStorage();
 
@@ -38,10 +48,15 @@ class HomeController extends ChangeNotifier {
     });
   }
 
-  late List<Media> _homeMediaList;
+  // Public streams
+  Stream<List<Media>> get homeMediaListStream =>
+      _homeMediaListController.stream;
+
+  Stream<bool> get isLoadingStream => _isLoadingController.stream;
+
+  // Getters đồng bộ
   List<Media> get homeMediaList => _homeMediaList;
 
-  bool _isLoadingHomeMedia = true;
   bool get isLoadingHomeMedia => _isLoadingHomeMedia;
 
   List<Media> get audioList =>
@@ -50,20 +65,31 @@ class HomeController extends ChangeNotifier {
   List<Media> get videoList =>
       _homeMediaList.where((media) => media.type == "Video").toList();
 
+  // Helper methods
+  void _emitHomeMediaList(List<Media> list) {
+    _homeMediaList = list;
+    if (!_homeMediaListController.isClosed) {
+      _homeMediaListController.add(list);
+    }
+  }
+
+  void _emitIsLoading(bool loading) {
+    _isLoadingHomeMedia = loading;
+    if (!_isLoadingController.isClosed) {
+      _isLoadingController.add(loading);
+    }
+  }
+
   Future<void> _loadHomeMediaFromStorage() async {
     try {
-      _isLoadingHomeMedia = true;
-      notifyListeners();
+      _emitIsLoading(true);
 
       final savedMedia = await _homeRepository.loadHomeMediaList();
-      _homeMediaList = savedMedia;
-
-      _isLoadingHomeMedia = false;
-      notifyListeners();
+      _emitHomeMediaList(savedMedia);
+      _emitIsLoading(false);
     } catch (e) {
       log('Error loading home media from storage: $e');
-      _isLoadingHomeMedia = false;
-      notifyListeners();
+      _emitIsLoading(false);
     }
   }
 
@@ -78,9 +104,9 @@ class HomeController extends ChangeNotifier {
   void addToHome(Media media) {
     final isExists = _homeMediaList.any((m) => m.path == media.path);
     if (!isExists) {
-      _homeMediaList.add(media);
+      final updatedList = [..._homeMediaList, media];
+      _emitHomeMediaList(updatedList);
       _saveHomeMediaToStorage();
-      notifyListeners();
     }
   }
 
@@ -88,17 +114,16 @@ class HomeController extends ChangeNotifier {
     if (_homeMediaList.isEmpty) return;
 
     if (await _homeRepository.clearHomeMediaList()) {
-      _homeMediaList.clear();
-      notifyListeners();
+      _emitHomeMediaList([]);
     }
   }
 
   Future<bool> deleteMedia(String path) async {
     final success = await _mediaRepository.deleteMedia(path);
     if (success) {
-      _homeMediaList.removeWhere((m) => m.path == path);
+      final updatedList = _homeMediaList.where((m) => m.path != path).toList();
+      _emitHomeMediaList(updatedList);
       _saveHomeMediaToStorage();
-      notifyListeners();
     }
     return success;
   }
@@ -106,12 +131,13 @@ class HomeController extends ChangeNotifier {
   Future<bool> renameMedia(Media media, String newName) async {
     final updatedMedia = await _mediaRepository.renameMedia(media, newName);
     if (updatedMedia != null) {
-      final homeIndex = _homeMediaList.indexWhere((m) => m.path == media.path);
+      final updatedList = List<Media>.from(_homeMediaList);
+      final homeIndex = updatedList.indexWhere((m) => m.path == media.path);
       if (homeIndex != -1) {
-        _homeMediaList[homeIndex] = updatedMedia;
+        updatedList[homeIndex] = updatedMedia;
+        _emitHomeMediaList(updatedList);
         _saveHomeMediaToStorage();
       }
-      notifyListeners();
       return true;
     }
     return false;
@@ -122,17 +148,18 @@ class HomeController extends ChangeNotifier {
   }
 
   Future<void> syncDeleteMedia(String path) async {
-    _homeMediaList.removeWhere((m) => m.path == path);
+    final updatedList = _homeMediaList.where((m) => m.path != path).toList();
+    _emitHomeMediaList(updatedList);
     await _saveHomeMediaToStorage();
-    notifyListeners();
   }
 
   Future<void> syncRenameMedia(Media oldMedia, Media newMedia) async {
-    final index = _homeMediaList.indexWhere((m) => m.path == oldMedia.path);
+    final updatedList = List<Media>.from(_homeMediaList);
+    final index = updatedList.indexWhere((m) => m.path == oldMedia.path);
     if (index != -1) {
-      _homeMediaList[index] = newMedia;
+      updatedList[index] = newMedia;
+      _emitHomeMediaList(updatedList);
       await _saveHomeMediaToStorage();
-      notifyListeners();
     }
   }
 
@@ -163,11 +190,11 @@ class HomeController extends ChangeNotifier {
     return message;
   }
 
-  @override
   void dispose() {
     log('HomeController DISPOSE');
     _deleteSubscription.cancel();
     _renameSubscription.cancel();
-    super.dispose();
+    _homeMediaListController.close();
+    _isLoadingController.close();
   }
 }

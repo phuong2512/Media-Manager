@@ -4,23 +4,30 @@ import 'package:media_manager/presentation/home/media_player_dialog/media_player
 import 'package:media_manager/core/di/locator.dart';
 import 'package:media_manager/data/models/media.dart';
 import 'package:media_manager/core/utils/app_colors.dart';
-import 'package:provider/provider.dart';
 
 Future<void> showMediaPlayerDialog(BuildContext context, Media media) async {
+  final controller = getIt<MediaPlayerController>();
+
   await showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (context) => ChangeNotifierProvider(
-      create: (_) => getIt<MediaPlayerController>(),
-      child: MediaPlayerDialog(media: media),
-    ),
+    builder: (context) =>
+        MediaPlayerDialog(media: media, controller: controller),
   );
+
+  // Dispose controller sau khi dialog đóng
+  await controller.dispose();
 }
 
 class MediaPlayerDialog extends StatefulWidget {
   final Media media;
+  final MediaPlayerController controller;
 
-  const MediaPlayerDialog({super.key, required this.media});
+  const MediaPlayerDialog({
+    super.key,
+    required this.media,
+    required this.controller,
+  });
 
   @override
   State<MediaPlayerDialog> createState() => _MediaPlayerDialogState();
@@ -30,52 +37,53 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
   @override
   void initState() {
     super.initState();
-    context.read<MediaPlayerController>().playMedia(widget.media);
+    widget.controller.playMedia(widget.media);
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.watch<MediaPlayerController>();
+    return StreamBuilder<bool>(
+      stream: widget.controller.isInitializedStream,
+      initialData: widget.controller.isInitialized,
+      builder: (context, initSnapshot) {
+        final isInitialized = initSnapshot.data ?? false;
 
-    if (!controller.isInitialized) {
-      return const Center(child: CircularProgressIndicator(color: Colors.cyan));
-    }
+        if (!isInitialized) {
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.cyan),
+          );
+        }
 
-    final isVideo = controller.isVideo;
-
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: isVideo ? 600 : 200,
-          maxWidth: 500,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(25),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.7),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: widget.controller.isVideo ? 600 : 200,
+              maxWidth: 500,
             ),
-          ],
-        ),
-        child: !controller.isInitialized
-            ? const Center(child: CircularProgressIndicator(color: Colors.cyan))
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildPlayer(context, controller),
-                  _buildControls(controller),
-                ],
-              ),
-      ),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [_buildPlayer(context), _buildControls()],
+            ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildPlayer(BuildContext context, MediaPlayerController controller) {
+  Widget _buildPlayer(BuildContext context) {
     return Expanded(
       child: Column(
         children: [
@@ -86,16 +94,16 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: controller.isVideo
+                    color: widget.controller.isVideo
                         ? AppColors.iconVideo.withValues(alpha: 0.2)
                         : AppColors.iconAudio.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
-                    controller.isVideo
+                    widget.controller.isVideo
                         ? Icons.ondemand_video
                         : Icons.play_circle_outline,
-                    color: controller.isVideo
+                    color: widget.controller.isVideo
                         ? AppColors.iconVideo
                         : AppColors.iconAudio,
                     size: 24,
@@ -107,7 +115,7 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        controller.currentMedia!.path
+                        widget.controller.currentMedia!.path
                             .split('/')
                             .last
                             .split('.')
@@ -122,7 +130,7 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        controller.currentMedia!.type,
+                        widget.controller.currentMedia!.type,
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
@@ -138,17 +146,13 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
               ],
             ),
           ),
-          Expanded(
-            child: controller.isVideo
-                ? _buildVideoPlayer(controller)
-                : SizedBox(),
-          ),
+          if (widget.controller.isVideo) Expanded(child: _buildVideoPlayer()),
         ],
       ),
     );
   }
 
-  Widget _buildVideoPlayer(MediaPlayerController controller) {
+  Widget _buildVideoPlayer() {
     return Container(
       margin: const EdgeInsets.all(15),
       decoration: BoxDecoration(
@@ -159,51 +163,75 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
         borderRadius: BorderRadius.circular(15),
         child: Padding(
           padding: const EdgeInsets.all(15),
-          child: Video(controller: controller.videoController!, controls: null),
+          child: Video(
+            controller: widget.controller.videoController!,
+            controls: null,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildControls(MediaPlayerController controller) {
+  Widget _buildControls() {
     return Column(
       children: [
-        Slider(
-          value: controller.position.inSeconds.toDouble(),
-          min: 0,
-          max: controller.duration.inSeconds.toDouble(),
-          onChanged: (value) {
-            controller.seek(Duration(seconds: value.toInt()));
+        StreamBuilder<Duration>(
+          stream: widget.controller.positionStream,
+          initialData: widget.controller.position,
+          builder: (context, positionSnapshot) {
+            return StreamBuilder<Duration>(
+              stream: widget.controller.durationStream,
+              initialData: widget.controller.duration,
+              builder: (context, durationSnapshot) {
+                final position = positionSnapshot.data ?? Duration.zero;
+                final duration = durationSnapshot.data ?? Duration.zero;
+
+                return Slider(
+                  value: position.inSeconds.toDouble(),
+                  min: 0,
+                  max: duration.inSeconds.toDouble(),
+                  onChanged: (value) {
+                    widget.controller.seek(Duration(seconds: value.toInt()));
+                  },
+                );
+              },
+            );
           },
         ),
         Container(
           padding: const EdgeInsets.all(10),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.blue.shade400, Colors.purple.shade400],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withValues(alpha: 0.3),
-                  blurRadius: 6,
-                  offset: const Offset(0, 3),
+          child: StreamBuilder<bool>(
+            stream: widget.controller.isPlayingStream,
+            initialData: widget.controller.isPlaying,
+            builder: (context, playingSnapshot) {
+              final isPlaying = playingSnapshot.data ?? false;
+
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade400, Colors.purple.shade400],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withValues(alpha: 0.3),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: IconButton(
-              iconSize: 48,
-              icon: Icon(
-                controller.isPlaying
-                    ? Icons.pause_rounded
-                    : Icons.play_arrow_rounded,
-                color: Colors.white,
-              ),
-              onPressed: () => controller.togglePlayPause(),
-            ),
+                child: IconButton(
+                  iconSize: 48,
+                  icon: Icon(
+                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    color: Colors.white,
+                  ),
+                  onPressed: () => widget.controller.togglePlayPause(),
+                ),
+              );
+            },
           ),
         ),
       ],

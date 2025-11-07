@@ -9,17 +9,34 @@ import 'package:media_manager/presentation/widgets/dialogs/rename_media_dialog.d
 
 enum SortOrder { none, newestFirst, oldestFirst }
 
-class MediaListController extends ChangeNotifier {
+class MediaListController {
   final MediaRepository _repository;
+
+  // Streams riêng biệt
+  final StreamController<List<Media>> _mediaListController;
+  final StreamController<bool> _isScanningController;
+  final StreamController<bool> _isLibraryScannedController;
+  final StreamController<SortOrder> _sortOrderController;
+
+  // Cache giá trị hiện tại
+  List<Media> _mediaList = [];
+  bool _isScanning = false;
+  bool _isLibraryScanned = false;
+  SortOrder _sortOrder = SortOrder.none;
 
   late final StreamSubscription _deleteSubscription;
   late final StreamSubscription _renameSubscription;
 
   MediaListController({required MediaRepository repository})
-    : _repository = repository {
-    _mediaList = [];
-    _isLibraryScanned = false;
-    _sortOrder = SortOrder.none;
+    : _repository = repository,
+      _mediaListController = StreamController<List<Media>>.broadcast(),
+      _isScanningController = StreamController<bool>.broadcast(),
+      _isLibraryScannedController = StreamController<bool>.broadcast(),
+      _sortOrderController = StreamController<SortOrder>.broadcast() {
+    _emitMediaList([]);
+    _emitIsScanning(false);
+    _emitIsLibraryScanned(false);
+    _emitSortOrder(SortOrder.none);
 
     _deleteSubscription = _repository.onMediaDeleted.listen(
       _handleMediaDeleted,
@@ -29,12 +46,59 @@ class MediaListController extends ChangeNotifier {
     );
   }
 
+  // Public streams
+  Stream<List<Media>> get mediaListStream => _mediaListController.stream;
+
+  Stream<bool> get isScanningStream => _isScanningController.stream;
+
+  Stream<bool> get isLibraryScannedStream => _isLibraryScannedController.stream;
+
+  Stream<SortOrder> get sortOrderStream => _sortOrderController.stream;
+
+  // Getters đồng bộ
+  List<Media> get libraryMediaList => _mediaList;
+
+  bool get isScanning => _isScanning;
+
+  bool get isLibraryScanned => _isLibraryScanned;
+
+  SortOrder get sortOrder => _sortOrder;
+
+  // Helper methods
+  void _emitMediaList(List<Media> list) {
+    _mediaList = list;
+    if (!_mediaListController.isClosed) {
+      _mediaListController.add(list);
+    }
+  }
+
+  void _emitIsScanning(bool scanning) {
+    _isScanning = scanning;
+    if (!_isScanningController.isClosed) {
+      _isScanningController.add(scanning);
+    }
+  }
+
+  void _emitIsLibraryScanned(bool scanned) {
+    _isLibraryScanned = scanned;
+    if (!_isLibraryScannedController.isClosed) {
+      _isLibraryScannedController.add(scanned);
+    }
+  }
+
+  void _emitSortOrder(SortOrder order) {
+    _sortOrder = order;
+    if (!_sortOrderController.isClosed) {
+      _sortOrderController.add(order);
+    }
+  }
+
   void _handleMediaDeleted(String path) {
     final int oldLength = _mediaList.length;
-    _mediaList.removeWhere((m) => m.path == path);
-    final bool didRemove = _mediaList.length < oldLength;
+    final updatedList = _mediaList.where((m) => m.path != path).toList();
+    final bool didRemove = updatedList.length < oldLength;
     if (didRemove) {
-      notifyListeners();
+      _emitMediaList(updatedList);
     }
   }
 
@@ -44,28 +108,13 @@ class MediaListController extends ChangeNotifier {
 
     if (oldMedia == null || newMedia == null) return;
 
-    final index = _mediaList.indexWhere((m) => m.path == oldMedia.path);
+    final updatedList = List<Media>.from(_mediaList);
+    final index = updatedList.indexWhere((m) => m.path == oldMedia.path);
     if (index != -1) {
-      _mediaList[index] = newMedia;
-      notifyListeners();
+      updatedList[index] = newMedia;
+      _emitMediaList(updatedList);
     }
   }
-
-  SortOrder _sortOrder = SortOrder.none;
-
-  SortOrder get sortOrder => _sortOrder;
-
-  late List<Media> _mediaList;
-
-  List<Media> get libraryMediaList => _mediaList;
-
-  bool _isLibraryScanned = false;
-
-  bool get isLibraryScanned => _isLibraryScanned;
-
-  bool _isScanning = false;
-
-  bool get isScanning => _isScanning;
 
   List<Media> filteredLibrary({required String type, required String query}) {
     final lowered = query.toLowerCase();
@@ -90,25 +139,27 @@ class MediaListController extends ChangeNotifier {
 
   void sortToggleByLastModified(SortOrder order) {
     if (order == SortOrder.none) return;
-    _sortOrder = order;
-    _mediaList.sort(
+
+    final sortedList = List<Media>.from(_mediaList);
+    sortedList.sort(
       (a, b) => order == SortOrder.newestFirst
           ? b.lastModified.compareTo(a.lastModified)
           : a.lastModified.compareTo(b.lastModified),
     );
-    notifyListeners();
+
+    _emitSortOrder(order);
+    _emitMediaList(sortedList);
   }
 
   Future<void> scanDeviceDirectory() async {
     if (_isLibraryScanned || _isScanning) return;
 
-    _isScanning = true;
-    notifyListeners();
+    _emitIsScanning(true);
 
     try {
       final scanned = await _repository.scanDeviceDirectory();
-      _mediaList = scanned;
-      _isLibraryScanned = true;
+      _emitMediaList(scanned);
+      _emitIsLibraryScanned(true);
 
       if (_sortOrder != SortOrder.none) {
         sortToggleByLastModified(_sortOrder);
@@ -116,8 +167,7 @@ class MediaListController extends ChangeNotifier {
     } catch (e) {
       log('Error scanning library: $e');
     } finally {
-      _isScanning = false;
-      notifyListeners();
+      _emitIsScanning(false);
     }
   }
 
@@ -152,11 +202,13 @@ class MediaListController extends ChangeNotifier {
     return message;
   }
 
-  @override
   void dispose() {
     log('MediaListController DISPOSE');
     _deleteSubscription.cancel();
     _renameSubscription.cancel();
-    super.dispose();
+    _mediaListController.close();
+    _isScanningController.close();
+    _isLibraryScannedController.close();
+    _sortOrderController.close();
   }
 }

@@ -3,27 +3,34 @@ import 'package:media_manager/presentation/home/home_controller.dart';
 import 'package:media_manager/core/di/locator.dart';
 import 'package:media_manager/core/utils/app_colors.dart';
 import 'package:media_manager/presentation/home/media_player_dialog/media_player_dialog.dart';
-import 'package:provider/provider.dart';
 import 'package:media_manager/data/models/media.dart';
 import 'package:media_manager/presentation/media_list/media_list_screen.dart';
 import 'package:media_manager/core/utils/format.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => getIt<HomeController>(),
-      child: _HomeScreenView(),
-    );
-  }
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenView extends StatelessWidget {
+class _HomeScreenState extends State<HomeScreen> {
+  late final HomeController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = getIt<HomeController>();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final controller = context.read<HomeController>();
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -37,7 +44,7 @@ class _HomeScreenView extends StatelessWidget {
                   title: const Text('Settings'),
                   content: ElevatedButton(
                     onPressed: () {
-                      controller.clearHomeMediaList();
+                      _controller.clearHomeMediaList();
                       Navigator.pop(context);
                     },
                     child: const Text('Delete Home Media List'),
@@ -49,7 +56,7 @@ class _HomeScreenView extends StatelessWidget {
           ),
         ],
       ),
-      body: _HomeBody(),
+      body: _HomeBody(controller: _controller),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Container(
         width: 56,
@@ -78,8 +85,6 @@ class _HomeScreenView extends StatelessWidget {
   }
 
   void _addMediaToHome(BuildContext context) async {
-    final homeController = context.read<HomeController>();
-
     final result = await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -92,25 +97,30 @@ class _HomeScreenView extends StatelessWidget {
     );
 
     if (result != null && result is Media) {
-      if (!context.mounted) return;
-      homeController.addToHome(result);
+      if (!mounted) return;
+      _controller.addToHome(result);
     }
   }
 }
 
 class _HomeBody extends StatelessWidget {
+  final HomeController controller;
+
+  const _HomeBody({required this.controller});
+
   @override
   Widget build(BuildContext context) {
-    final controller = context.watch<HomeController>();
-    final isLoading = controller.isLoadingHomeMedia;
-    final homeAudioList = controller.audioList;
-    final homeVideoList = controller.videoList;
-
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: isLoading
-            ? const Center(
+        child: StreamBuilder<bool>(
+          stream: controller.isLoadingStream,
+          initialData: controller.isLoadingHomeMedia,
+          builder: (context, loadingSnapshot) {
+            final isLoading = loadingSnapshot.data ?? true;
+
+            if (isLoading) {
+              return const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -119,30 +129,47 @@ class _HomeBody extends StatelessWidget {
                     Text('Loading', style: TextStyle(color: Colors.white60)),
                   ],
                 ),
-              )
-            : SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Drum Removal',
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+              );
+            }
+
+            return StreamBuilder<List<Media>>(
+              stream: controller.homeMediaListStream,
+              initialData: controller.homeMediaList,
+              builder: (context, mediaSnapshot) {
+                final homeAudioList = controller.audioList;
+                final homeVideoList = controller.videoList;
+
+                return SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Drum Removal',
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    _homeMediaListTile("Audio", homeAudioList),
-                    const SizedBox(height: 10),
-                    _homeMediaListTile("Video", homeVideoList),
-                  ],
-                ),
-              ),
+                      _homeMediaListTile("Audio", homeAudioList, context),
+                      const SizedBox(height: 10),
+                      _homeMediaListTile("Video", homeVideoList, context),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _homeMediaListTile(String mediaType, List mediaList) {
+  Widget _homeMediaListTile(
+    String mediaType,
+    List<Media> mediaList,
+    BuildContext context,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -192,7 +219,6 @@ class _HomeBody extends StatelessWidget {
   }
 
   void _handleMediaOptions(Media media, BuildContext context) async {
-    final controller = context.read<HomeController>();
     final message = await controller.handleMediaOptions(context, media);
 
     if (message != null && context.mounted) {
