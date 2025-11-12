@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:media_manager/core/di/locator.dart';
 import 'package:media_manager/features/media/domain/entities/media.dart';
 import 'package:media_manager/features/media/presentation/controller/media_list_controller.dart';
@@ -6,55 +7,49 @@ import 'package:media_manager/core/utils/app_colors.dart';
 import 'package:media_manager/features/media/presentation/widgets/audio_tab.dart';
 import 'package:media_manager/features/media/presentation/widgets/video_tab.dart';
 
-class MediaListScreen extends StatefulWidget {
+class MediaListScreen extends StatelessWidget {
   const MediaListScreen({super.key});
 
   @override
-  State<MediaListScreen> createState() => _MediaListScreenState();
+  Widget build(BuildContext context) {
+    return Provider<MediaListController>(
+      create: (_) {
+        final controller = getIt<MediaListController>();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          controller.scanDeviceDirectory();
+        });
+        return controller;
+      },
+      dispose: (_, controller) => controller.dispose(),
+      child: const _MediaListScreenContent(),
+    );
+  }
 }
 
-class _MediaListScreenState extends State<MediaListScreen> {
-  late final MediaListController _controller;
+class _MediaListScreenContent extends StatefulWidget {
+  const _MediaListScreenContent();
+
+  @override
+  State<_MediaListScreenContent> createState() =>
+      _MediaListScreenContentState();
+}
+
+class _MediaListScreenContentState extends State<_MediaListScreenContent> {
   int selectedTabIndex = 0;
   final TextEditingController _searchController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    _controller = getIt<MediaListController>();
-    _loadMediaLibrary();
-  }
-
-  Future<void> _loadMediaLibrary() async {
-    if (!_controller.isLibraryScanned && !_controller.isScanning) {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await _controller.scanDeviceDirectory();
-      });
-    }
-  }
-
-  @override
   void dispose() {
     _searchController.dispose();
-    _controller.dispose();
     super.dispose();
-  }
-
-  void _handleMediaOptions(Media media) async {
-    final message = await _controller.handleMediaOptions(context, media);
-
-    if (message != null && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final controller = Provider.of<MediaListController>(context, listen: false);
     return StreamBuilder<bool>(
-      stream: _controller.isScanningStream,
-      initialData: _controller.isScanning,
+      stream: controller.isScanningStream,
+      initialData: controller.isScanning,
       builder: (context, scanningSnapshot) {
         final isScanning = scanningSnapshot.data ?? false;
 
@@ -66,9 +61,12 @@ class _MediaListScreenState extends State<MediaListScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(color: Colors.cyan),
-                    SizedBox(height: 10),
-                    Text('Loading', style: TextStyle(color: Colors.white60)),
+                    const CircularProgressIndicator(color: Colors.cyan),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Loading',
+                      style: TextStyle(color: Colors.white60),
+                    ),
                   ],
                 ),
               ),
@@ -145,10 +143,10 @@ class _MediaListScreenState extends State<MediaListScreen> {
                 const SizedBox(height: 10),
                 Expanded(
                   child: StreamBuilder<List<Media>>(
-                    stream: _controller.mediaListStream,
-                    initialData: _controller.libraryMediaList,
+                    stream: controller.mediaListStream,
+                    initialData: controller.libraryMediaList,
                     builder: (context, mediaSnapshot) {
-                      final filteredList = _controller.filteredLibrary(
+                      final filteredList = controller.filteredLibrary(
                         type: selectedTabIndex == 0 ? "Audio" : "Video",
                         query: _searchController.text,
                       );
@@ -156,18 +154,20 @@ class _MediaListScreenState extends State<MediaListScreen> {
                       return selectedTabIndex == 0
                           ? AudioTab(
                               audioList: filteredList,
-                              onMediaOptionsPressed: _handleMediaOptions,
+                              onMediaOptionsPressed: (media) =>
+                                  _handleMediaOptions(media, controller),
                             )
                           : VideoTab(
                               videoList: filteredList,
-                              onMediaOptionsPressed: _handleMediaOptions,
+                              onMediaOptionsPressed: (media) =>
+                                  _handleMediaOptions(media, controller),
                             );
                     },
                   ),
                 ),
                 const SizedBox(height: 10),
                 IconButton(
-                  onPressed: () => _showSortOptionsDialog(context),
+                  onPressed: () => _showSortOptionsDialog(context, controller),
                   icon: const Icon(
                     Icons.filter_list,
                     color: AppColors.iconPrimary,
@@ -204,13 +204,26 @@ class _MediaListScreenState extends State<MediaListScreen> {
     );
   }
 
-  void _showSortOptionsDialog(BuildContext context) {
+  void _handleMediaOptions(Media media, MediaListController controller) async {
+    final message = await controller.handleMediaOptions(context, media);
+
+    if (message != null && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  void _showSortOptionsDialog(
+    BuildContext context,
+    MediaListController controller,
+  ) {
     showDialog(
       context: context,
       builder: (dialogContext) {
         return StreamBuilder<SortOrder>(
-          stream: _controller.sortOrderStream,
-          initialData: _controller.sortOrder,
+          stream: controller.sortOrderStream,
+          initialData: controller.sortOrder,
           builder: (context, snapshot) {
             final currentSortOrder = snapshot.data ?? SortOrder.none;
 
@@ -237,7 +250,7 @@ class _MediaListScreenState extends State<MediaListScreen> {
                             'Từ mới đến cũ',
                             style: TextStyle(fontSize: 19),
                           ),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           if (currentSortOrder == SortOrder.newestFirst)
                             const Icon(
                               Icons.check,
@@ -248,7 +261,7 @@ class _MediaListScreenState extends State<MediaListScreen> {
                       ),
                     ),
                     onTap: () {
-                      _controller.sortToggleByLastModified(
+                      controller.sortToggleByLastModified(
                         SortOrder.newestFirst,
                       );
                       Navigator.pop(dialogContext);
@@ -263,7 +276,7 @@ class _MediaListScreenState extends State<MediaListScreen> {
                             'Từ cũ đến mới',
                             style: TextStyle(fontSize: 19),
                           ),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           if (currentSortOrder == SortOrder.oldestFirst)
                             const Icon(
                               Icons.check,
@@ -274,7 +287,7 @@ class _MediaListScreenState extends State<MediaListScreen> {
                       ),
                     ),
                     onTap: () {
-                      _controller.sortToggleByLastModified(
+                      controller.sortToggleByLastModified(
                         SortOrder.oldestFirst,
                       );
                       Navigator.pop(dialogContext);

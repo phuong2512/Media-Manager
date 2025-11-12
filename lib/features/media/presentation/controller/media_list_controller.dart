@@ -50,6 +50,7 @@ class MediaListController {
        _isScanningController = StreamController<bool>.broadcast(),
        _isLibraryScannedController = StreamController<bool>.broadcast(),
        _sortOrderController = StreamController<SortOrder>.broadcast() {
+    log('✅ MediaListController INIT');
     _emitMediaList([]);
     _emitIsScanning(false);
     _emitIsLibraryScanned(false);
@@ -220,7 +221,7 @@ class MediaListController {
   }
 
   void dispose() {
-    log('MediaListController DISPOSE');
+    log('❌ MediaListController DISPOSE');
     _deleteSubscription.cancel();
     _renameSubscription.cancel();
     _mediaListController.close();

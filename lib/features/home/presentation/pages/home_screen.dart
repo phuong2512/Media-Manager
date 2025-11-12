@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:media_manager/core/di/locator.dart';
 import 'package:media_manager/core/utils/app_colors.dart';
 import 'package:media_manager/features/home/presentation/controller/home_controller.dart';
@@ -7,30 +8,26 @@ import 'package:media_manager/features/media/domain/entities/media.dart';
 import 'package:media_manager/features/media/presentation/pages/media_list_screen.dart';
 import 'package:media_manager/core/utils/format.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  Widget build(BuildContext context) {
+    return Provider<HomeController>(
+      create: (_) => getIt<HomeController>(),
+      dispose: (_, controller) => controller.dispose(),
+      child: const _HomeScreenContent(),
+    );
+  }
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  late final HomeController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = getIt<HomeController>();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+class _HomeScreenContent extends StatelessWidget {
+  const _HomeScreenContent();
 
   @override
   Widget build(BuildContext context) {
+    final controller = Provider.of<HomeController>(context, listen: false);
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -40,12 +37,12 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               showDialog(
                 context: context,
-                builder: (context) => AlertDialog(
+                builder: (dialogContext) => AlertDialog(
                   title: const Text('Settings'),
                   content: ElevatedButton(
                     onPressed: () {
-                      _controller.clearHomeMediaList();
-                      Navigator.pop(context);
+                      controller.clearHomeMediaList();
+                      Navigator.pop(dialogContext);
                     },
                     child: const Text('Delete Home Media List'),
                   ),
@@ -56,35 +53,39 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: _HomeBody(controller: _controller),
+      body: const _HomeBody(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const LinearGradient(
-            colors: [Colors.blue, Colors.purple],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      floatingActionButton: _buildFAB(context, controller),
+    );
+  }
+
+  Widget _buildFAB(BuildContext context, HomeController controller) {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: const LinearGradient(
+          colors: [Colors.blue, Colors.purple],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(77),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(77),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: IconButton(
-          icon: const Icon(Icons.add, size: 35, color: Colors.white),
-          onPressed: () => _addMediaToHome(context),
-        ),
+        ],
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.add, size: 35, color: Colors.white),
+        onPressed: () => _addMediaToHome(context, controller),
       ),
     );
   }
 
-  void _addMediaToHome(BuildContext context) async {
+  void _addMediaToHome(BuildContext context, HomeController controller) async {
     final result = await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -97,19 +98,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (result != null && result is Media) {
-      if (!mounted) return;
-      _controller.addToHome(result);
+      if (!context.mounted) return;
+      controller.addToHome(result);
     }
   }
 }
 
 class _HomeBody extends StatelessWidget {
-  final HomeController controller;
-
-  const _HomeBody({required this.controller});
+  const _HomeBody();
 
   @override
   Widget build(BuildContext context) {
+    final controller = Provider.of<HomeController>(context, listen: false);
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -151,9 +152,19 @@ class _HomeBody extends StatelessWidget {
                           color: Colors.white,
                         ),
                       ),
-                      _homeMediaListTile("Audio", homeAudioList, context),
+                      _homeMediaListTile(
+                        "Audio",
+                        homeAudioList,
+                        context,
+                        controller,
+                      ),
                       const SizedBox(height: 10),
-                      _homeMediaListTile("Video", homeVideoList, context),
+                      _homeMediaListTile(
+                        "Video",
+                        homeVideoList,
+                        context,
+                        controller,
+                      ),
                     ],
                   ),
                 );
@@ -169,6 +180,7 @@ class _HomeBody extends StatelessWidget {
     String mediaType,
     List<Media> mediaList,
     BuildContext context,
+    HomeController controller,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,9 +217,11 @@ class _HomeBody extends StatelessWidget {
                 "${formatBytes(media.size)} | ${media.duration} | ${media.path.split('.').last}",
               ),
               onTap: () => _playMedia(media, context),
-              onLongPress: () => _handleMediaOptions(media, context),
+              onLongPress: () =>
+                  _handleMediaOptions(media, context, controller),
               trailing: IconButton(
-                onPressed: () => _handleMediaOptions(media, context),
+                onPressed: () =>
+                    _handleMediaOptions(media, context, controller),
                 icon: const Icon(Icons.more_horiz),
                 color: Colors.white,
               ),
@@ -218,7 +232,11 @@ class _HomeBody extends StatelessWidget {
     );
   }
 
-  void _handleMediaOptions(Media media, BuildContext context) async {
+  void _handleMediaOptions(
+    Media media,
+    BuildContext context,
+    HomeController controller,
+  ) async {
     final message = await controller.handleMediaOptions(context, media);
 
     if (message != null && context.mounted) {

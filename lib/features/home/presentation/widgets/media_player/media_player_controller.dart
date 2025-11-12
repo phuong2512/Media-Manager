@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:media_manager/features/media/domain/entities/media.dart' as app_media;
+import 'package:media_manager/features/media/domain/entities/media.dart'
+    as app_media;
 
 class MediaPlayerController {
   // Streams riêng biệt
@@ -25,6 +26,7 @@ class MediaPlayerController {
       _isInitializedController = StreamController<bool>.broadcast(),
       _positionController = StreamController<Duration>.broadcast(),
       _durationController = StreamController<Duration>.broadcast() {
+    log('✅ MediaPlayerController INIT');
     _emitIsPlaying(false);
     _emitIsInitialized(false);
     _emitPosition(Duration.zero);
@@ -33,19 +35,30 @@ class MediaPlayerController {
 
   // Public streams
   Stream<bool> get isPlayingStream => _isPlayingController.stream;
+
   Stream<bool> get isInitializedStream => _isInitializedController.stream;
+
   Stream<Duration> get positionStream => _positionController.stream;
+
   Stream<Duration> get durationStream => _durationController.stream;
 
   // Getters đồng bộ
   Player? get player => _player;
+
   VideoController? get videoController => _videoController;
+
   app_media.Media? get currentMedia => _currentMedia;
+
   bool get isPlaying => _isPlaying;
+
   bool get isInitialized => _isInitialized;
+
   Duration get position => _position;
+
   Duration get duration => _duration;
+
   bool get hasMedia => _currentMedia != null;
+
   bool get isVideo => _currentMedia?.type == "Video";
 
   void _emitIsPlaying(bool playing) {
@@ -136,7 +149,7 @@ class MediaPlayerController {
   }
 
   Future<void> dispose() async {
-    log('MediaPlayerController DISPOSE');
+    log('❌ MediaPlayerController DISPOSE');
     await disposePlayer();
     _isPlayingController.close();
     _isInitializedController.close();

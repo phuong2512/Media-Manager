@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:media_manager/core/di/locator.dart';
 import 'package:media_manager/features/home/presentation/widgets/media_player/media_player_controller.dart';
@@ -6,27 +7,23 @@ import 'package:media_manager/core/utils/app_colors.dart';
 import 'package:media_manager/features/media/domain/entities/media.dart';
 
 Future<void> showMediaPlayerDialog(BuildContext context, Media media) async {
-  final controller = getIt<MediaPlayerController>();
-
   await showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (context) =>
-        MediaPlayerDialog(media: media, controller: controller),
+    builder: (context) {
+      return Provider<MediaPlayerController>(
+        create: (_) => getIt<MediaPlayerController>(),
+        dispose: (_, controller) => controller.dispose(),
+        child: MediaPlayerDialog(media: media),
+      );
+    },
   );
-
-  await controller.dispose();
 }
 
 class MediaPlayerDialog extends StatefulWidget {
   final Media media;
-  final MediaPlayerController controller;
 
-  const MediaPlayerDialog({
-    super.key,
-    required this.media,
-    required this.controller,
-  });
+  const MediaPlayerDialog({super.key, required this.media});
 
   @override
   State<MediaPlayerDialog> createState() => _MediaPlayerDialogState();
@@ -36,14 +33,25 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
   @override
   void initState() {
     super.initState();
-    widget.controller.playMedia(widget.media);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final controller = Provider.of<MediaPlayerController>(
+        context,
+        listen: false,
+      );
+      controller.playMedia(widget.media);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final controller = Provider.of<MediaPlayerController>(
+      context,
+      listen: false,
+    );
+
     return StreamBuilder<bool>(
-      stream: widget.controller.isInitializedStream,
-      initialData: widget.controller.isInitialized,
+      stream: controller.isInitializedStream,
+      initialData: controller.isInitialized,
       builder: (context, initSnapshot) {
         final isInitialized = initSnapshot.data ?? false;
 
@@ -58,7 +66,7 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
           insetPadding: const EdgeInsets.symmetric(horizontal: 20),
           child: Container(
             constraints: BoxConstraints(
-              maxHeight: widget.controller.isVideo ? 600 : 200,
+              maxHeight: controller.isVideo ? 600 : 200,
               maxWidth: 500,
             ),
             decoration: BoxDecoration(
@@ -74,7 +82,10 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [_buildPlayer(context), _buildControls()],
+              children: [
+                _buildPlayer(context, controller),
+                _buildControls(controller),
+              ],
             ),
           ),
         );
@@ -82,7 +93,7 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
     );
   }
 
-  Widget _buildPlayer(BuildContext context) {
+  Widget _buildPlayer(BuildContext context, MediaPlayerController controller) {
     return Expanded(
       child: Column(
         children: [
@@ -93,16 +104,16 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: widget.controller.isVideo
+                    color: controller.isVideo
                         ? AppColors.iconVideo.withValues(alpha: 0.2)
                         : AppColors.iconAudio.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
-                    widget.controller.isVideo
+                    controller.isVideo
                         ? Icons.ondemand_video
                         : Icons.play_circle_outline,
-                    color: widget.controller.isVideo
+                    color: controller.isVideo
                         ? AppColors.iconVideo
                         : AppColors.iconAudio,
                     size: 24,
@@ -114,7 +125,7 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.controller.currentMedia!.path
+                        controller.currentMedia!.path
                             .split('/')
                             .last
                             .split('.')
@@ -129,7 +140,7 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        widget.controller.currentMedia!.type,
+                        controller.currentMedia!.type,
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
@@ -145,13 +156,14 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
               ],
             ),
           ),
-          if (widget.controller.isVideo) Expanded(child: _buildVideoPlayer()),
+          if (controller.isVideo)
+            Expanded(child: _buildVideoPlayer(controller)),
         ],
       ),
     );
   }
 
-  Widget _buildVideoPlayer() {
+  Widget _buildVideoPlayer(MediaPlayerController controller) {
     return Container(
       margin: const EdgeInsets.all(15),
       decoration: BoxDecoration(
@@ -162,25 +174,22 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
         borderRadius: BorderRadius.circular(15),
         child: Padding(
           padding: const EdgeInsets.all(15),
-          child: Video(
-            controller: widget.controller.videoController!,
-            controls: null,
-          ),
+          child: Video(controller: controller.videoController!, controls: null),
         ),
       ),
     );
   }
 
-  Widget _buildControls() {
+  Widget _buildControls(MediaPlayerController controller) {
     return Column(
       children: [
         StreamBuilder<Duration>(
-          stream: widget.controller.positionStream,
-          initialData: widget.controller.position,
+          stream: controller.positionStream,
+          initialData: controller.position,
           builder: (context, positionSnapshot) {
             return StreamBuilder<Duration>(
-              stream: widget.controller.durationStream,
-              initialData: widget.controller.duration,
+              stream: controller.durationStream,
+              initialData: controller.duration,
               builder: (context, durationSnapshot) {
                 final position = positionSnapshot.data ?? Duration.zero;
                 final duration = durationSnapshot.data ?? Duration.zero;
@@ -190,7 +199,7 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
                   min: 0,
                   max: duration.inSeconds.toDouble(),
                   onChanged: (value) {
-                    widget.controller.seek(Duration(seconds: value.toInt()));
+                    controller.seek(Duration(seconds: value.toInt()));
                   },
                 );
               },
@@ -200,8 +209,8 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
         Container(
           padding: const EdgeInsets.all(10),
           child: StreamBuilder<bool>(
-            stream: widget.controller.isPlayingStream,
-            initialData: widget.controller.isPlaying,
+            stream: controller.isPlayingStream,
+            initialData: controller.isPlaying,
             builder: (context, playingSnapshot) {
               final isPlaying = playingSnapshot.data ?? false;
 
@@ -227,7 +236,7 @@ class _MediaPlayerDialogState extends State<MediaPlayerDialog> {
                     isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                     color: Colors.white,
                   ),
-                  onPressed: () => widget.controller.togglePlayPause(),
+                  onPressed: () => controller.togglePlayPause(),
                 ),
               );
             },

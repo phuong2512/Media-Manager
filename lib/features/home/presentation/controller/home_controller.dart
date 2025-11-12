@@ -50,6 +50,7 @@ class HomeController {
        _mediaRepository = mediaRepository,
        _homeMediaListController = StreamController<List<Media>>.broadcast(),
        _isLoadingController = StreamController<bool>.broadcast() {
+    log('✅ HomeController INIT');
     _emitHomeMediaList([]);
     _emitIsLoading(true);
 
@@ -210,7 +211,7 @@ class HomeController {
   }
 
   void dispose() {
-    log('HomeController DISPOSE');
+    log('❌ HomeController DISPOSE');
     _deleteSubscription.cancel();
     _renameSubscription.cancel();
     _homeMediaListController.close();
