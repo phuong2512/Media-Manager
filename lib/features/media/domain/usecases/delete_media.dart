@@ -1,0 +1,11 @@
+import 'package:media_manager/features/media/domain/repositories/media_repository.dart';
+
+class DeleteMedia {
+  final MediaRepository repository;
+
+  DeleteMedia(this.repository);
+
+  Future<bool> call(String path) async {
+    return await repository.deleteMedia(path);
+  }
+}
