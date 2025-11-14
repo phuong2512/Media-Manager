@@ -6,7 +6,7 @@ class RenameMedia {
 
   RenameMedia(this.repository);
 
-  Future<Media?> call(RenameMediaParams params) async {
+  Future<Media?> execute(RenameMediaParams params) async {
     return await repository.renameMedia(params.media, params.newName);
   }
 }

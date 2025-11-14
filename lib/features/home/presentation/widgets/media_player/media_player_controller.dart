@@ -6,13 +6,13 @@ import 'package:media_manager/features/media/domain/entities/media.dart'
     as app_media;
 
 class MediaPlayerController {
-  // Streams riêng biệt
+
   final StreamController<bool> _isPlayingController;
   final StreamController<bool> _isInitializedController;
   final StreamController<Duration> _positionController;
   final StreamController<Duration> _durationController;
 
-  // Cache giá trị hiện tại
+
   Player? _player;
   VideoController? _videoController;
   app_media.Media? _currentMedia;
@@ -33,7 +33,7 @@ class MediaPlayerController {
     _emitDuration(Duration.zero);
   }
 
-  // Public streams
+
   Stream<bool> get isPlayingStream => _isPlayingController.stream;
 
   Stream<bool> get isInitializedStream => _isInitializedController.stream;
@@ -42,7 +42,7 @@ class MediaPlayerController {
 
   Stream<Duration> get durationStream => _durationController.stream;
 
-  // Getters đồng bộ
+
   Player? get player => _player;
 
   VideoController? get videoController => _videoController;

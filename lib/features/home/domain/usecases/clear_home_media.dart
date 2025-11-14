@@ -5,7 +5,7 @@ class ClearHomeMedia {
 
   ClearHomeMedia(this.repository);
 
-  Future<bool> call() async {
+  Future<bool> execute() async {
     return await repository.clearHomeMediaList();
   }
 }

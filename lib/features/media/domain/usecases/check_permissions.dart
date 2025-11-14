@@ -5,7 +5,7 @@ class CheckPermissions {
 
   CheckPermissions(this.repository);
 
-  Future<bool> call() async {
+  Future<bool> execute() async {
     return await repository.checkPermissions();
   }
 }

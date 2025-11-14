@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:media_manager/core/di/locator.dart';
@@ -34,14 +36,32 @@ class _MediaListScreenContent extends StatefulWidget {
       _MediaListScreenContentState();
 }
 
-class _MediaListScreenContentState extends State<_MediaListScreenContent> {
+class _MediaListScreenContentState extends State<_MediaListScreenContent>
+    with WidgetsBindingObserver {
   int selectedTabIndex = 0;
   final TextEditingController _searchController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    log(state.name);
+    final controller = Provider.of<MediaListController>(context, listen: false);
+    if (state == AppLifecycleState.resumed && controller.isLibraryScanned) {
+      controller.rescanDeviceDirectory();
+    }
   }
 
   @override
@@ -144,13 +164,11 @@ class _MediaListScreenContentState extends State<_MediaListScreenContent> {
                 Expanded(
                   child: StreamBuilder<List<Media>>(
                     stream: controller.mediaListStream,
-                    initialData: controller.libraryMediaList,
                     builder: (context, mediaSnapshot) {
                       final filteredList = controller.filteredLibrary(
                         type: selectedTabIndex == 0 ? "Audio" : "Video",
                         query: _searchController.text,
                       );
-
                       return selectedTabIndex == 0
                           ? AudioTab(
                               audioList: filteredList,

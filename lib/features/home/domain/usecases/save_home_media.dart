@@ -6,7 +6,7 @@ class SaveHomeMedia {
 
   SaveHomeMedia(this.repository);
 
-  Future<bool> call(List<Media> mediaList) async {
+  Future<bool> execute(List<Media> mediaList) async {
     return await repository.saveHomeMediaList(mediaList);
   }
 }

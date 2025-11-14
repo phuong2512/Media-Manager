@@ -70,12 +70,18 @@ class MediaScannerDataSource {
   }
 
   Future<bool> requestStoragePermissions() async {
-    if (await Permission.manageExternalStorage.isGranted) return true;
-    final status = await Permission.manageExternalStorage.request();
-    if (status.isGranted) return true;
-
-    final storageStatus = await Permission.storage.request();
-    return storageStatus.isGranted;
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.storage,
+      Permission.audio,
+      Permission.videos,
+    ].request();
+    if (statuses[Permission.storage] == PermissionStatus.granted) {
+      return true;
+    }if (statuses[Permission.audio] == PermissionStatus.granted &&
+        statuses[Permission.videos] == PermissionStatus.granted) {
+      return true;
+    }
+    return false;
   }
 
   Future<List<Directory>> getCandidateRoots() async {

@@ -36,6 +36,8 @@ class MediaDataSource {
 
   Future<MediaModel?> renameMedia(MediaModel media, String newName) async {
     try {
+      final hasPermission = await checkPermissions();
+      if (!hasPermission) return null;
       final file = File(media.path);
       if (!await file.exists()) return null;
       final dir = file.parent.path;
@@ -44,7 +46,6 @@ class MediaDataSource {
       await file.rename(newPath);
       final stat = await File(newPath).stat();
       return MediaModel(
-        // (Ghi chú: Trả về Model)
         path: newPath,
         duration: media.duration,
         size: stat.size,

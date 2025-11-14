@@ -20,17 +20,15 @@ class MediaListController {
   final ShareMedia _shareMedia;
   final MediaRepository _repository;
 
-  // Streams riêng biệt
-  final StreamController<List<Media>> _mediaListController;
-  final StreamController<bool> _isScanningController;
-  final StreamController<bool> _isLibraryScannedController;
-  final StreamController<SortOrder> _sortOrderController;
+  final StreamController<List<Media>> _mediaListController = StreamController<List<Media>>.broadcast();
+  final StreamController<bool> _isScanningController = StreamController<bool>.broadcast();
+  final StreamController<bool> _isLibraryScannedController = StreamController<bool>.broadcast();
+  final StreamController<SortOrder> _sortOrderController = StreamController<SortOrder>.broadcast();
 
-  // Cache giá trị hiện tại
   List<Media> _mediaList = [];
-  bool _isScanning = false;
-  bool _isLibraryScanned = false;
   SortOrder _sortOrder = SortOrder.none;
+  bool _isLibraryScanned = false;
+  bool _isScanning = false;
 
   late final StreamSubscription _deleteSubscription;
   late final StreamSubscription _renameSubscription;
@@ -45,11 +43,7 @@ class MediaListController {
        _deleteMedia = deleteMedia,
        _renameMedia = renameMedia,
        _shareMedia = shareMedia,
-       _repository = repository,
-       _mediaListController = StreamController<List<Media>>.broadcast(),
-       _isScanningController = StreamController<bool>.broadcast(),
-       _isLibraryScannedController = StreamController<bool>.broadcast(),
-       _sortOrderController = StreamController<SortOrder>.broadcast() {
+       _repository = repository {
     log('✅ MediaListController INIT');
     _emitMediaList([]);
     _emitIsScanning(false);
@@ -57,14 +51,14 @@ class MediaListController {
     _emitSortOrder(SortOrder.none);
 
     _deleteSubscription = _repository.onMediaDeleted.listen(
-      _handleMediaDeleted,
+          (path) => _handleMediaDeleted(path),
     );
+
     _renameSubscription = _repository.onMediaRenamed.listen(
-      _handleMediaRenamed,
+          (event) => _handleMediaRenamed(event),
     );
   }
 
-  // Public streams
   Stream<List<Media>> get mediaListStream => _mediaListController.stream;
 
   Stream<bool> get isScanningStream => _isScanningController.stream;
@@ -72,9 +66,6 @@ class MediaListController {
   Stream<bool> get isLibraryScannedStream => _isLibraryScannedController.stream;
 
   Stream<SortOrder> get sortOrderStream => _sortOrderController.stream;
-
-  // Getters đồng bộ
-  List<Media> get libraryMediaList => _mediaList;
 
   bool get isScanning => _isScanning;
 
@@ -144,15 +135,15 @@ class MediaListController {
   }
 
   Future<bool> deleteMedia(String path) async {
-    return await _deleteMedia(path);
+    return await _deleteMedia.execute(path);
   }
 
   Future<Media?> renameMedia(Media media, String newName) async {
-    return await _renameMedia(RenameMediaParams(media, newName));
+    return await _renameMedia.execute(RenameMediaParams(media, newName));
   }
 
   Future<bool> shareMedia(String path) async {
-    return await _shareMedia(path);
+    return await _shareMedia.execute(path);
   }
 
   void sortToggleByLastModified(SortOrder order) {
@@ -175,7 +166,7 @@ class MediaListController {
     _emitIsScanning(true);
 
     try {
-      final scanned = await _scanDevice();
+      final scanned = await _scanDevice.execute();
       _emitMediaList(scanned);
       _emitIsLibraryScanned(true);
 
@@ -184,6 +175,26 @@ class MediaListController {
       }
     } catch (e) {
       log('Error scanning library: $e');
+    } finally {
+      _emitIsScanning(false);
+    }
+  }
+
+  Future<void> rescanDeviceDirectory() async {
+    if (_isScanning) return;
+
+    _emitIsScanning(true);
+
+    try {
+      final scanned = await _scanDevice.execute();
+      _emitMediaList(scanned);
+      _emitIsLibraryScanned(true);
+
+      if (_sortOrder != SortOrder.none) {
+        sortToggleByLastModified(_sortOrder);
+      }
+    } catch (e) {
+      log('Error re-scanning library: $e');
     } finally {
       _emitIsScanning(false);
     }

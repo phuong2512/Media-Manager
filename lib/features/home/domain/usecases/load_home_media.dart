@@ -6,7 +6,7 @@ class LoadHomeMedia {
 
   LoadHomeMedia(this.repository);
 
-  Future<List<Media>> call() async {
+  Future<List<Media>> execute() async {
     return await repository.loadHomeMediaList();
   }
 }

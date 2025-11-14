@@ -5,7 +5,7 @@ class DeleteMedia {
 
   DeleteMedia(this.repository);
 
-  Future<bool> call(String path) async {
+  Future<bool> execute(String path) async {
     return await repository.deleteMedia(path);
   }
 }

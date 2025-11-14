@@ -4,7 +4,7 @@ class ShareMedia {
   final MediaRepository repository;
   ShareMedia(this.repository);
 
-  Future<bool> call(String path) async {
+  Future<bool> execute(String path) async {
     return await repository.shareMedia(path);
   }
 }

@@ -116,7 +116,6 @@ class _HomeBody extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 15),
         child: StreamBuilder<bool>(
           stream: controller.isLoadingStream,
-          initialData: controller.isLoadingHomeMedia,
           builder: (context, loadingSnapshot) {
             final isLoading = loadingSnapshot.data ?? true;
 
@@ -135,7 +134,6 @@ class _HomeBody extends StatelessWidget {
 
             return StreamBuilder<List<Media>>(
               stream: controller.homeMediaListStream,
-              initialData: controller.homeMediaList,
               builder: (context, mediaSnapshot) {
                 final homeAudioList = controller.audioList;
                 final homeVideoList = controller.videoList;
