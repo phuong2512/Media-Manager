@@ -51,7 +51,7 @@ class HomeController {
     log('✅ HomeController INIT');
     _emitHomeMediaList([]);
     _emitIsLoading(true);
-    _loadHomeMediaFromStorage();
+    loadHomeMediaFromStorage();
 
     _deleteSubscription = _mediaRepository.onMediaDeleted.listen(
       (path) => syncDeleteMedia(path),
@@ -83,7 +83,7 @@ class HomeController {
     }
   }
 
-  Future<void> _loadHomeMediaFromStorage() async {
+  Future<void> loadHomeMediaFromStorage() async {
     try {
       _emitIsLoading(true);
       final savedMedia = await _loadHomeMedia.execute();

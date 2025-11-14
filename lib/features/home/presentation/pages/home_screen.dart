@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:media_manager/core/di/locator.dart';
@@ -21,8 +23,44 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _HomeScreenContent extends StatelessWidget {
+class _HomeScreenContent extends StatefulWidget {
   const _HomeScreenContent();
+
+  @override
+  State<_HomeScreenContent> createState() => _HomeScreenContentState();
+}
+
+class _HomeScreenContentState extends State<_HomeScreenContent>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    WidgetsBinding.instance.addObserver(this);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    final controller = Provider.of<HomeController>(context, listen: false);
+    switch (state) {
+      case AppLifecycleState.resumed:
+        controller.loadHomeMediaFromStorage();
+      case AppLifecycleState.detached:
+      //TODO: Handle this case.
+      case AppLifecycleState.inactive:
+      //TODO: Handle this case.
+      case AppLifecycleState.hidden:
+      //TODO: Handle this case.
+      case AppLifecycleState.paused:
+      //TODO: Handle this case.
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

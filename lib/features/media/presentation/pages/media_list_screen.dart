@@ -57,10 +57,20 @@ class _MediaListScreenContentState extends State<_MediaListScreenContent>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    log(state.name);
     final controller = Provider.of<MediaListController>(context, listen: false);
-    if (state == AppLifecycleState.resumed && controller.isLibraryScanned) {
-      controller.rescanDeviceDirectory();
+    switch (state) {
+      case AppLifecycleState.resumed:
+        if (controller.isLibraryScanned) {
+          controller.rescanDeviceDirectory();
+        }
+      case AppLifecycleState.detached:
+      //TODO: Handle this case.
+      case AppLifecycleState.inactive:
+      //TODO: Handle this case.
+      case AppLifecycleState.hidden:
+      //TODO: Handle this case.
+      case AppLifecycleState.paused:
+      //TODO: Handle this case.
     }
   }
 
