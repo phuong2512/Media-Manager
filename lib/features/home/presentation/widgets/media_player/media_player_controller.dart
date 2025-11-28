@@ -7,10 +7,10 @@ import 'package:media_manager/features/media/domain/entities/media.dart'
 
 class MediaPlayerController {
 
-  final StreamController<bool> _isPlayingController;
-  final StreamController<bool> _isInitializedController;
-  final StreamController<Duration> _positionController;
-  final StreamController<Duration> _durationController;
+  final StreamController<bool> _isPlayingController = StreamController<bool>.broadcast();
+  final StreamController<bool> _isInitializedController = StreamController<bool>.broadcast();
+  final StreamController<Duration> _positionController = StreamController<Duration>.broadcast();
+  final StreamController<Duration> _durationController = StreamController<Duration>.broadcast() ;
 
 
   Player? _player;
@@ -21,11 +21,7 @@ class MediaPlayerController {
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
 
-  MediaPlayerController()
-    : _isPlayingController = StreamController<bool>.broadcast(),
-      _isInitializedController = StreamController<bool>.broadcast(),
-      _positionController = StreamController<Duration>.broadcast(),
-      _durationController = StreamController<Duration>.broadcast() {
+  MediaPlayerController() {
     log('✅ MediaPlayerController INIT');
     _emitIsPlaying(false);
     _emitIsInitialized(false);
@@ -42,9 +38,6 @@ class MediaPlayerController {
 
   Stream<Duration> get durationStream => _durationController.stream;
 
-
-  Player? get player => _player;
-
   VideoController? get videoController => _videoController;
 
   app_media.Media? get currentMedia => _currentMedia;
@@ -56,8 +49,6 @@ class MediaPlayerController {
   Duration get position => _position;
 
   Duration get duration => _duration;
-
-  bool get hasMedia => _currentMedia != null;
 
   bool get isVideo => _currentMedia?.type == "Video";
 

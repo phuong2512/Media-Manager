@@ -22,13 +22,10 @@ class HomeController {
   final ShareMedia _shareMedia;
   final MediaRepository _mediaRepository;
 
-  final StreamController<List<Media>> _homeMediaListController =
-      StreamController<List<Media>>.broadcast();
-  final StreamController<bool> _isLoadingController =
-      StreamController<bool>.broadcast();
+  final StreamController<List<Media>> _homeMediaListController = StreamController<List<Media>>.broadcast();
+  final StreamController<bool> _isLoadingController = StreamController<bool>.broadcast();
 
   List<Media> _homeMediaList = [];
-  final bool _isLoadingHomeMedia = true;
 
   late final StreamSubscription _deleteSubscription;
   late final StreamSubscription _renameSubscription;
@@ -64,7 +61,6 @@ class HomeController {
 
   Stream<List<Media>> get homeMediaListStream => _homeMediaListController.stream;
   Stream<bool> get isLoadingStream => _isLoadingController.stream;
-  bool get isLoadingHomeMedia => _isLoadingHomeMedia;
 
   List<Media> get audioList => _homeMediaList.where((media) => media.type == "Audio").toList();
   List<Media> get videoList => _homeMediaList.where((media) => media.type == "Video").toList();
