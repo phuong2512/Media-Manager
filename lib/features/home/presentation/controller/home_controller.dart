@@ -9,9 +9,9 @@ import 'package:media_manager/features/home/domain/usecases/save_home_media.dart
 import 'package:media_manager/features/media/domain/usecases/delete_media.dart';
 import 'package:media_manager/features/media/domain/usecases/rename_media.dart';
 import 'package:media_manager/features/media/domain/usecases/share_media.dart';
-import 'package:media_manager/presentation/shared_widgets/bottom_sheet/media_options_bottom_sheet.dart';
-import 'package:media_manager/presentation/shared_widgets/dialogs/delete_media_dialog.dart';
-import 'package:media_manager/presentation/shared_widgets/dialogs/rename_media_dialog.dart';
+import 'package:media_manager/core/widgets/bottom_sheet/media_options_bottom_sheet.dart';
+import 'package:media_manager/core/widgets/dialogs/delete_media_dialog.dart';
+import 'package:media_manager/core/widgets/dialogs/rename_media_dialog.dart';
 
 class HomeController {
   final LoadHomeMedia _loadHomeMedia;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/core/utils/app_colors.dart';
-import 'package:media_manager/presentation/shared_widgets/list_tiles/option_list_tile.dart';
+import 'package:media_manager/core/widgets/list_tiles/option_list_tile.dart';
 
 class MediaOptionsBottomSheet extends StatelessWidget {
   const MediaOptionsBottomSheet({super.key});
