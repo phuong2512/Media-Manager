@@ -23,45 +23,25 @@ import 'package:shared_preferences/shared_preferences.dart';
 final getIt = GetIt.instance;
 
 Future<void> setupLocator() async {
-  // External
   final prefs = SharedPreferencesAsync();
   getIt.registerLazySingleton(() => prefs);
 
+  /// Home
   // DataSources
-  getIt.registerLazySingleton(() => DurationDataSource());
-  getIt.registerLazySingleton(
-    () => MediaScannerDataSource(getIt<DurationDataSource>()),
-  );
-  getIt.registerLazySingleton(
-    () => MediaDataSource(scanner: getIt<MediaScannerDataSource>()),
-  );
   getIt.registerLazySingleton(
     () => HomeDataSource(getIt<SharedPreferencesAsync>()),
   );
-
   // Repositories
-  getIt.registerLazySingleton<MediaRepository>(
-    () => MediaRepositoryImpl(dataSource: getIt<MediaDataSource>()),
-  );
   getIt.registerLazySingleton<HomeRepository>(
     () => HomeRepositoryImpl(dataSource: getIt<HomeDataSource>()),
   );
 
   // Usecases
-  // Home
   getIt.registerLazySingleton(() => LoadHomeMedia(getIt<HomeRepository>()));
   getIt.registerLazySingleton(() => SaveHomeMedia(getIt<HomeRepository>()));
   getIt.registerLazySingleton(() => ClearHomeMedia(getIt<HomeRepository>()));
-  // Media
-  getIt.registerLazySingleton(() => ScanDevice(getIt<MediaRepository>()));
-  getIt.registerLazySingleton(() => DeleteMedia(getIt<MediaRepository>()));
-  getIt.registerLazySingleton(() => RenameMedia(getIt<MediaRepository>()));
-  getIt.registerLazySingleton(() => ShareMedia(getIt<MediaRepository>()));
-  getIt.registerLazySingleton(() => CheckPermissions(getIt<MediaRepository>()));
 
   // Controllers
-  getIt.registerFactory(() => MediaPlayerController());
-
   getIt.registerFactory(
     () => HomeController(
       loadHomeMedia: getIt<LoadHomeMedia>(),
@@ -73,7 +53,31 @@ Future<void> setupLocator() async {
       mediaRepository: getIt<MediaRepository>(),
     ),
   );
+  getIt.registerFactory(() => MediaPlayerController());
 
+  /// Media
+  // DataSources
+  getIt.registerLazySingleton(() => DurationDataSource());
+  getIt.registerLazySingleton(
+    () => MediaScannerDataSource(getIt<DurationDataSource>()),
+  );
+  getIt.registerLazySingleton(
+    () => MediaDataSource(scanner: getIt<MediaScannerDataSource>()),
+  );
+
+  // Repositories
+  getIt.registerLazySingleton<MediaRepository>(
+    () => MediaRepositoryImpl(dataSource: getIt<MediaDataSource>()),
+  );
+
+  // Usecases
+  getIt.registerLazySingleton(() => ScanDevice(getIt<MediaRepository>()));
+  getIt.registerLazySingleton(() => DeleteMedia(getIt<MediaRepository>()));
+  getIt.registerLazySingleton(() => RenameMedia(getIt<MediaRepository>()));
+  getIt.registerLazySingleton(() => ShareMedia(getIt<MediaRepository>()));
+  getIt.registerLazySingleton(() => CheckPermissions(getIt<MediaRepository>()));
+
+  // Controllers
   getIt.registerFactory(
     () => MediaListController(
       scanDevice: getIt<ScanDevice>(),
