@@ -1,13 +1,11 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:media_manager/core/di/locator.dart';
+import 'package:media_manager/core/utils/app_colors.dart';
 import 'package:media_manager/features/media/domain/entities/media.dart';
 import 'package:media_manager/features/media/presentation/controller/media_list_controller.dart';
-import 'package:media_manager/core/utils/app_colors.dart';
 import 'package:media_manager/features/media/presentation/widgets/audio_tab.dart';
 import 'package:media_manager/features/media/presentation/widgets/video_tab.dart';
+import 'package:provider/provider.dart';
 
 class MediaListScreen extends StatelessWidget {
   const MediaListScreen({super.key});

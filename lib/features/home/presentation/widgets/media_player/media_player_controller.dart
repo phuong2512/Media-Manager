@@ -1,17 +1,20 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:media_manager/features/media/domain/entities/media.dart'
     as app_media;
 
 class MediaPlayerController {
-
-  final StreamController<bool> _isPlayingController = StreamController<bool>.broadcast();
-  final StreamController<bool> _isInitializedController = StreamController<bool>.broadcast();
-  final StreamController<Duration> _positionController = StreamController<Duration>.broadcast();
-  final StreamController<Duration> _durationController = StreamController<Duration>.broadcast() ;
-
+  final StreamController<bool> _isPlayingController =
+      StreamController<bool>.broadcast();
+  final StreamController<bool> _isInitializedController =
+      StreamController<bool>.broadcast();
+  final StreamController<Duration> _positionController =
+      StreamController<Duration>.broadcast();
+  final StreamController<Duration> _durationController =
+      StreamController<Duration>.broadcast();
 
   Player? _player;
   VideoController? _videoController;
@@ -28,7 +31,6 @@ class MediaPlayerController {
     _emitPosition(Duration.zero);
     _emitDuration(Duration.zero);
   }
-
 
   Stream<bool> get isPlayingStream => _isPlayingController.stream;
 

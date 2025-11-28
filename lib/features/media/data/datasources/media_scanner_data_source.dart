@@ -1,9 +1,10 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:media_manager/features/media/data/datasources/duration_data_source.dart';
+import 'package:media_manager/features/media/data/models/media_file_model.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
-import 'package:media_manager/features/media/data/models/media.dart';
 
 class MediaScannerDataSource {
   static const _audioExtensions = [
@@ -27,12 +28,12 @@ class MediaScannerDataSource {
 
   MediaScannerDataSource(this._durationDataSource);
 
-  Future<List<MediaModel>> scanDeviceDirectory() async {
+  Future<List<MediaFileModel>> scanDeviceDirectory() async {
     final hasPermission = await requestStoragePermissions();
     if (!hasPermission) return [];
 
     final roots = await getCandidateRoots();
-    final items = <MediaModel>[];
+    final items = <MediaFileModel>[];
 
     for (final dir in roots) {
       if (await dir.exists()) {
@@ -54,7 +55,7 @@ class MediaScannerDataSource {
           );
 
           items.add(
-            MediaModel(
+            MediaFileModel(
               path: f.path,
               duration: duration,
               size: stat.size,
@@ -77,7 +78,8 @@ class MediaScannerDataSource {
     ].request();
     if (statuses[Permission.storage] == PermissionStatus.granted) {
       return true;
-    }if (statuses[Permission.audio] == PermissionStatus.granted &&
+    }
+    if (statuses[Permission.audio] == PermissionStatus.granted &&
         statuses[Permission.videos] == PermissionStatus.granted) {
       return true;
     }

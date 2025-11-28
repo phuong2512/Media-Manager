@@ -1,15 +1,16 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:media_manager/features/media/data/models/media.dart';
 import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:media_manager/features/media/data/models/media_storage_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeDataSource {
   final SharedPreferencesAsync _prefs;
 
   HomeDataSource(this._prefs);
 
-  Future<bool> saveHomeMediaList(List<MediaModel> mediaList) async {
+  Future<bool> saveHomeMediaList(List<MediaStorageModel> mediaList) async {
     try {
       final jsonList = mediaList.map((media) => media.toJson()).toList();
       final jsonString = jsonEncode(jsonList);
@@ -21,7 +22,7 @@ class HomeDataSource {
     }
   }
 
-  Future<List<MediaModel>> loadHomeMediaList() async {
+  Future<List<MediaStorageModel>> loadHomeMediaList() async {
     try {
       final jsonString = await _prefs.getString('homeMediaList');
 
@@ -30,9 +31,11 @@ class HomeDataSource {
       }
 
       final List<dynamic> jsonList = jsonDecode(jsonString);
-      final mediaList = jsonList.map((json) => MediaModel.fromJson(json)).toList();
+      final mediaList = jsonList
+          .map((json) => MediaStorageModel.fromJson(json))
+          .toList();
 
-      final homeMediaList = <MediaModel>[];
+      final homeMediaList = <MediaStorageModel>[];
       for (final media in mediaList) {
         final file = File(media.path);
         if (await file.exists()) {

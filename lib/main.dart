@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
-import 'package:media_manager/core/utils/app_colors.dart';
 import 'package:media_manager/core/di/locator.dart';
+import 'package:media_manager/core/utils/app_colors.dart';
 import 'package:media_manager/features/home/presentation/pages/home_screen.dart';
 
 void main() {

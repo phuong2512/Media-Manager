@@ -1,17 +1,18 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:flutter/material.dart';
-import 'package:media_manager/features/media/domain/entities/media.dart';
-import 'package:media_manager/features/media/domain/repositories/media_repository.dart';
-import 'package:media_manager/features/home/domain/usecases/clear_home_media.dart';
-import 'package:media_manager/features/home/domain/usecases/load_home_media.dart';
-import 'package:media_manager/features/home/domain/usecases/save_home_media.dart';
-import 'package:media_manager/features/media/domain/usecases/delete_media.dart';
-import 'package:media_manager/features/media/domain/usecases/rename_media.dart';
-import 'package:media_manager/features/media/domain/usecases/share_media.dart';
 import 'package:media_manager/core/widgets/bottom_sheet/media_options_bottom_sheet.dart';
 import 'package:media_manager/core/widgets/dialogs/delete_media_dialog.dart';
 import 'package:media_manager/core/widgets/dialogs/rename_media_dialog.dart';
+import 'package:media_manager/features/home/domain/usecases/clear_home_media.dart';
+import 'package:media_manager/features/home/domain/usecases/load_home_media.dart';
+import 'package:media_manager/features/home/domain/usecases/save_home_media.dart';
+import 'package:media_manager/features/media/domain/entities/media.dart';
+import 'package:media_manager/features/media/domain/repositories/media_repository.dart';
+import 'package:media_manager/features/media/domain/usecases/delete_media.dart';
+import 'package:media_manager/features/media/domain/usecases/rename_media.dart';
+import 'package:media_manager/features/media/domain/usecases/share_media.dart';
 
 class HomeController {
   final LoadHomeMedia _loadHomeMedia;
@@ -22,8 +23,10 @@ class HomeController {
   final ShareMedia _shareMedia;
   final MediaRepository _mediaRepository;
 
-  final StreamController<List<Media>> _homeMediaListController = StreamController<List<Media>>.broadcast();
-  final StreamController<bool> _isLoadingController = StreamController<bool>.broadcast();
+  final StreamController<List<Media>> _homeMediaListController =
+      StreamController<List<Media>>.broadcast();
+  final StreamController<bool> _isLoadingController =
+      StreamController<bool>.broadcast();
 
   List<Media> _homeMediaList = [];
 
@@ -59,11 +62,16 @@ class HomeController {
     );
   }
 
-  Stream<List<Media>> get homeMediaListStream => _homeMediaListController.stream;
+  Stream<List<Media>> get homeMediaListStream =>
+      _homeMediaListController.stream;
+
   Stream<bool> get isLoadingStream => _isLoadingController.stream;
 
-  List<Media> get audioList => _homeMediaList.where((media) => media.type == "Audio").toList();
-  List<Media> get videoList => _homeMediaList.where((media) => media.type == "Video").toList();
+  List<Media> get audioList =>
+      _homeMediaList.where((media) => media.type == "Audio").toList();
+
+  List<Media> get videoList =>
+      _homeMediaList.where((media) => media.type == "Video").toList();
 
   // Helper methods
   void _emitHomeMediaList(List<Media> list) {
@@ -127,7 +135,9 @@ class HomeController {
   }
 
   Future<bool> renameMedia(Media media, String newName) async {
-    final updatedMedia = await _renameMedia.execute(RenameMediaParams(media, newName));
+    final updatedMedia = await _renameMedia.execute(
+      RenameMediaParams(media, newName),
+    );
     if (updatedMedia != null) {
       final updatedList = List<Media>.from(_homeMediaList);
       final homeIndex = updatedList.indexWhere((m) => m.path == media.path);

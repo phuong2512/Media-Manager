@@ -1,15 +1,16 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:media_manager/core/widgets/bottom_sheet/media_options_bottom_sheet.dart';
+import 'package:media_manager/core/widgets/dialogs/delete_media_dialog.dart';
+import 'package:media_manager/core/widgets/dialogs/rename_media_dialog.dart';
 import 'package:media_manager/features/media/domain/entities/media.dart';
 import 'package:media_manager/features/media/domain/repositories/media_repository.dart';
 import 'package:media_manager/features/media/domain/usecases/delete_media.dart';
 import 'package:media_manager/features/media/domain/usecases/rename_media.dart';
 import 'package:media_manager/features/media/domain/usecases/scan_device.dart';
 import 'package:media_manager/features/media/domain/usecases/share_media.dart';
-import 'package:media_manager/core/widgets/bottom_sheet/media_options_bottom_sheet.dart';
-import 'package:media_manager/core/widgets/dialogs/delete_media_dialog.dart';
-import 'package:media_manager/core/widgets/dialogs/rename_media_dialog.dart';
 
 enum SortOrder { none, newestFirst, oldestFirst }
 
@@ -20,10 +21,14 @@ class MediaListController {
   final ShareMedia _shareMedia;
   final MediaRepository _repository;
 
-  final StreamController<List<Media>> _mediaListController = StreamController<List<Media>>.broadcast();
-  final StreamController<bool> _isScanningController = StreamController<bool>.broadcast();
-  final StreamController<bool> _isLibraryScannedController = StreamController<bool>.broadcast();
-  final StreamController<SortOrder> _sortOrderController = StreamController<SortOrder>.broadcast();
+  final StreamController<List<Media>> _mediaListController =
+      StreamController<List<Media>>.broadcast();
+  final StreamController<bool> _isScanningController =
+      StreamController<bool>.broadcast();
+  final StreamController<bool> _isLibraryScannedController =
+      StreamController<bool>.broadcast();
+  final StreamController<SortOrder> _sortOrderController =
+      StreamController<SortOrder>.broadcast();
 
   List<Media> _mediaList = [];
   SortOrder _sortOrder = SortOrder.none;
@@ -51,11 +56,11 @@ class MediaListController {
     _emitSortOrder(SortOrder.none);
 
     _deleteSubscription = _repository.onMediaDeleted.listen(
-          (path) => _handleMediaDeleted(path),
+      (path) => _handleMediaDeleted(path),
     );
 
     _renameSubscription = _repository.onMediaRenamed.listen(
-          (event) => _handleMediaRenamed(event),
+      (event) => _handleMediaRenamed(event),
     );
   }
 

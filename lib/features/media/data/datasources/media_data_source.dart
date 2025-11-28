@@ -1,9 +1,10 @@
-import 'dart:io';
 import 'dart:developer';
+import 'dart:io';
+
 import 'package:media_manager/features/media/data/datasources/media_scanner_data_source.dart';
+import 'package:media_manager/features/media/data/models/media_file_model.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:media_manager/features/media/data/models/media.dart';
 
 class MediaDataSource {
   final MediaScannerDataSource _scanner;
@@ -34,7 +35,10 @@ class MediaDataSource {
     }
   }
 
-  Future<MediaModel?> renameMedia(MediaModel media, String newName) async {
+  Future<MediaFileModel?> renameMedia(
+    MediaFileModel media,
+    String newName,
+  ) async {
     try {
       final hasPermission = await checkPermissions();
       if (!hasPermission) return null;
@@ -45,7 +49,7 @@ class MediaDataSource {
       final newPath = '$dir/$newName.$ext';
       await file.rename(newPath);
       final stat = await File(newPath).stat();
-      return MediaModel(
+      return MediaFileModel(
         path: newPath,
         duration: media.duration,
         size: stat.size,
@@ -71,7 +75,7 @@ class MediaDataSource {
     }
   }
 
-  Future<List<MediaModel>> scanDeviceDirectory() async {
+  Future<List<MediaFileModel>> scanDeviceDirectory() async {
     return await _scanner.scanDeviceDirectory();
   }
 }

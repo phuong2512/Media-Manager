@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:media_manager/core/di/locator.dart';
 import 'package:media_manager/core/utils/app_colors.dart';
+import 'package:media_manager/core/utils/format.dart';
 import 'package:media_manager/features/home/presentation/controller/home_controller.dart';
 import 'package:media_manager/features/home/presentation/widgets/media_player/media_player_dialog.dart';
 import 'package:media_manager/features/media/domain/entities/media.dart';
 import 'package:media_manager/features/media/presentation/pages/media_list_screen.dart';
-import 'package:media_manager/core/utils/format.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

@@ -50,7 +50,7 @@ class RenameMediaDialog extends StatelessWidget {
                   shape: WidgetStatePropertyAll(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
-                      side: const BorderSide(color: AppColors.borderSecondary ),
+                      side: const BorderSide(color: AppColors.borderSecondary),
                     ),
                   ),
                 ),

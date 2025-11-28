@@ -1,6 +1,7 @@
 import 'dart:async';
+
 import 'package:media_manager/features/media/data/datasources/media_data_source.dart';
-import 'package:media_manager/features/media/data/models/media.dart';
+import 'package:media_manager/features/media/data/models/media_file_model.dart';
 import 'package:media_manager/features/media/domain/entities/media.dart';
 import 'package:media_manager/features/media/domain/repositories/media_repository.dart';
 
@@ -23,8 +24,8 @@ class MediaRepositoryImpl implements MediaRepository {
 
   @override
   Future<List<Media>> scanDeviceDirectory() async {
-    final mediaModels = await _dataSource.scanDeviceDirectory();
-    return mediaModels.map((model) => model.toEntity()).toList();
+    final mediaFileModels = await _dataSource.scanDeviceDirectory();
+    return mediaFileModels.map((model) => model.toEntity()).toList();
   }
 
   @override
@@ -36,9 +37,9 @@ class MediaRepositoryImpl implements MediaRepository {
 
   @override
   Future<Media?> renameMedia(Media media, String newName) async {
-    final mediaModel = MediaModel.fromEntity(media);
+    final mediaFileModel = MediaFileModel.fromEntity(media);
 
-    final updatedModel = await _dataSource.renameMedia(mediaModel, newName);
+    final updatedModel = await _dataSource.renameMedia(mediaFileModel, newName);
 
     if (updatedModel != null) {
       final updatedEntity = updatedModel.toEntity();

@@ -1,13 +1,13 @@
 import 'package:media_manager/features/media/domain/entities/media.dart';
 
-class MediaModel {
+class MediaStorageModel {
   final String path;
   final String duration;
   final int size;
   final DateTime lastModified;
   final String type;
 
-  MediaModel({
+  MediaStorageModel({
     required this.path,
     required this.duration,
     required this.size,
@@ -15,28 +15,8 @@ class MediaModel {
     required this.type,
   });
 
-  Media toEntity() {
-    return Media(
-      path: path,
-      duration: duration,
-      size: size,
-      lastModified: lastModified,
-      type: type,
-    );
-  }
-
-  factory MediaModel.fromEntity(Media media) {
-    return MediaModel(
-      path: media.path,
-      duration: media.duration,
-      size: media.size,
-      lastModified: media.lastModified,
-      type: media.type,
-    );
-  }
-
-  factory MediaModel.fromJson(Map<String, dynamic> json) {
-    return MediaModel(
+  factory MediaStorageModel.fromJson(Map<String, dynamic> json) {
+    return MediaStorageModel(
       path: json["path"],
       duration: json["duration"],
       size: json["size"],
@@ -53,5 +33,25 @@ class MediaModel {
       "lastModified": lastModified.toIso8601String(),
       "type": type,
     };
+  }
+
+  Media toEntity() {
+    return Media(
+      path: path,
+      duration: duration,
+      size: size,
+      lastModified: lastModified,
+      type: type,
+    );
+  }
+
+  factory MediaStorageModel.fromEntity(Media media) {
+    return MediaStorageModel(
+      path: media.path,
+      duration: media.duration,
+      size: media.size,
+      lastModified: media.lastModified,
+      type: media.type,
+    );
   }
 }

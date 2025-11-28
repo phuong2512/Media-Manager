@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:media_manager/core/di/locator.dart';
-import 'package:media_manager/features/home/presentation/widgets/media_player/media_player_controller.dart';
 import 'package:media_manager/core/utils/app_colors.dart';
+import 'package:media_manager/features/home/presentation/widgets/media_player/media_player_controller.dart';
 import 'package:media_manager/features/media/domain/entities/media.dart';
+import 'package:provider/provider.dart';
 
 Future<void> showMediaPlayerDialog(BuildContext context, Media media) async {
   await showDialog(

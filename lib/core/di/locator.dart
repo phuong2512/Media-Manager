@@ -10,8 +10,8 @@ import 'package:media_manager/features/home/presentation/widgets/media_player/me
 import 'package:media_manager/features/media/data/datasources/duration_data_source.dart';
 import 'package:media_manager/features/media/data/datasources/media_data_source.dart';
 import 'package:media_manager/features/media/data/datasources/media_scanner_data_source.dart';
-import 'package:media_manager/features/media/domain/repositories/media_repository.dart';
 import 'package:media_manager/features/media/data/repositories/media_repository_impl.dart';
+import 'package:media_manager/features/media/domain/repositories/media_repository.dart';
 import 'package:media_manager/features/media/domain/usecases/check_permissions.dart';
 import 'package:media_manager/features/media/domain/usecases/delete_media.dart';
 import 'package:media_manager/features/media/domain/usecases/rename_media.dart';

@@ -2,6 +2,7 @@ import 'package:media_manager/features/media/domain/repositories/media_repositor
 
 class ShareMedia {
   final MediaRepository repository;
+
   ShareMedia(this.repository);
 
   Future<bool> execute(String path) async {
