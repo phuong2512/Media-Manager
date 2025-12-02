@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:media_manager/core/models/media.dart';
 import 'package:media_manager/core/utils/app_colors.dart';
-import 'package:media_manager/features/media/domain/entities/media.dart';
 
 class DeleteMediaDialog extends StatelessWidget {
   final Media media;
