@@ -12,7 +12,7 @@ class MediaListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Provider<MediaListController>(
+    return ChangeNotifierProvider<MediaListController>(
       create: (_) {
         final controller = getIt<MediaListController>();
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -20,7 +20,6 @@ class MediaListScreen extends StatelessWidget {
         });
         return controller;
       },
-      dispose: (_, controller) => controller.dispose(),
       child: const _MediaListScreenContent(),
     );
   }

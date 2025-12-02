@@ -10,7 +10,7 @@ import 'package:media_manager/core/widgets/dialogs/rename_media_dialog.dart';
 
 enum SortOrder { none, newestFirst, oldestFirst }
 
-class MediaListController {
+class MediaListController extends ChangeNotifier {
   final MediaRepository _repository;
 
   final StreamController<List<Media>> _mediaListController =
@@ -219,6 +219,7 @@ class MediaListController {
     return message;
   }
 
+  @override
   void dispose() {
     log('❌ MediaListController DISPOSE');
     _deleteSubscription.cancel();
@@ -227,5 +228,6 @@ class MediaListController {
     _isScanningController.close();
     _isLibraryScannedController.close();
     _sortOrderController.close();
+    super.dispose();
   }
 }

@@ -9,7 +9,7 @@ import 'package:media_manager/core/widgets/bottom_sheet/media_options_bottom_she
 import 'package:media_manager/core/widgets/dialogs/delete_media_dialog.dart';
 import 'package:media_manager/core/widgets/dialogs/rename_media_dialog.dart';
 
-class HomeController {
+class HomeController extends ChangeNotifier {
   final HomeRepository _homeRepository;
   final MediaRepository _mediaRepository;
 
@@ -180,11 +180,13 @@ class HomeController {
     return message;
   }
 
+  @override
   void dispose() {
     log('❌ HomeController DISPOSE');
     _deleteSubscription.cancel();
     _renameSubscription.cancel();
     _homeMediaListController.close();
     _isLoadingController.close();
+    super.dispose();
   }
 }

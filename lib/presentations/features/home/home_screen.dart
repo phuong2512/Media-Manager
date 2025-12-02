@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/core/di/locator.dart';
 import 'package:media_manager/core/models/media.dart';
-import 'package:media_manager/core/utils/app_colors.dart';
-import 'package:media_manager/core/utils/format.dart';
 import 'package:media_manager/presentations/features/home/home_controller.dart';
+import 'package:media_manager/presentations/features/home/widgets/floating_action_button_widget.dart';
+import 'package:media_manager/presentations/features/home/widgets/media_list_tile_widget.dart';
 import 'package:media_manager/presentations/features/home/widgets/media_player/media_player_dialog.dart';
 import 'package:media_manager/presentations/features/media/media_list_screen.dart';
 import 'package:provider/provider.dart';
@@ -13,9 +13,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Provider<HomeController>(
+    return ChangeNotifierProvider<HomeController>(
       create: (_) => getIt<HomeController>(),
-      dispose: (_, controller) => controller.dispose(),
       child: const _HomeScreenContent(),
     );
   }
@@ -54,8 +53,6 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
 
   @override
   Widget build(BuildContext context) {
-    final controller = Provider.of<HomeController>(context, listen: false);
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -69,7 +66,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                   title: const Text('Settings'),
                   content: ElevatedButton(
                     onPressed: () {
-                      controller.clearHomeMediaList();
+                      _controller.clearHomeMediaList();
                       Navigator.pop(dialogContext);
                     },
                     child: const Text('Delete Home Media List'),
@@ -81,39 +78,80 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
           ),
         ],
       ),
-      body: const _HomeBody(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: _buildFAB(context, controller),
-    );
-  }
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: StreamBuilder<bool>(
+            stream: _controller.isLoadingStream,
+            builder: (context, loadingSnapshot) {
+              final isLoading = loadingSnapshot.data ?? true;
 
-  Widget _buildFAB(BuildContext context, HomeController controller) {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: const LinearGradient(
-          colors: [Colors.blue, Colors.purple],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(77),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
+              if (isLoading) {
+                return const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(color: Colors.cyan),
+                      SizedBox(height: 10),
+                      Text('Loading', style: TextStyle(color: Colors.white60)),
+                    ],
+                  ),
+                );
+              }
+
+              return StreamBuilder<List<Media>>(
+                stream: _controller.homeMediaListStream,
+                builder: (context, mediaSnapshot) {
+                  final homeAudioList = _controller.audioList;
+                  final homeVideoList = _controller.videoList;
+
+                  return SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Drum Removal',
+                          style: TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        MediaListTileWidget(
+                          mediaType: 'Audio',
+                          mediaList: homeAudioList,
+                          controller: _controller,
+                          onTap: _playMedia,
+                          onLongPress: _handleMediaOptions,
+                          onIconPress: _handleMediaOptions,
+                        ),
+                        const SizedBox(height: 10),
+                        MediaListTileWidget(
+                          mediaType: 'Video',
+                          mediaList: homeVideoList,
+                          controller: _controller,
+                          onTap: _playMedia,
+                          onLongPress: _handleMediaOptions,
+                          onIconPress: _handleMediaOptions,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
           ),
-        ],
+        ),
       ),
-      child: IconButton(
-        icon: const Icon(Icons.add, size: 35, color: Colors.white),
-        onPressed: () => _addMediaToHome(context, controller),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FloatingActionButtonWidget(
+        controller: _controller,
+        onPress: _addMediaToHome,
       ),
     );
   }
 
-  void _addMediaToHome(BuildContext context, HomeController controller) async {
+  void _addMediaToHome() async {
     final result = await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -127,152 +165,21 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
 
     if (result != null && result is Media) {
       if (!context.mounted) return;
-      controller.addToHome(result);
+      _controller.addToHome(result);
     }
   }
-}
 
-class _HomeBody extends StatelessWidget {
-  const _HomeBody();
+  void _handleMediaOptions(Media media) async {
+    final message = await _controller.handleMediaOptions(context, media);
 
-  @override
-  Widget build(BuildContext context) {
-    final controller = Provider.of<HomeController>(context, listen: false);
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        child: StreamBuilder<bool>(
-          stream: controller.isLoadingStream,
-          builder: (context, loadingSnapshot) {
-            final isLoading = loadingSnapshot.data ?? true;
-
-            if (isLoading) {
-              return const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(color: Colors.cyan),
-                    SizedBox(height: 10),
-                    Text('Loading', style: TextStyle(color: Colors.white60)),
-                  ],
-                ),
-              );
-            }
-
-            return StreamBuilder<List<Media>>(
-              stream: controller.homeMediaListStream,
-              builder: (context, mediaSnapshot) {
-                final homeAudioList = controller.audioList;
-                final homeVideoList = controller.videoList;
-
-                return SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Drum Removal',
-                        style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      _homeMediaListTile(
-                        "Audio",
-                        homeAudioList,
-                        context,
-                        controller,
-                      ),
-                      const SizedBox(height: 10),
-                      _homeMediaListTile(
-                        "Video",
-                        homeVideoList,
-                        context,
-                        controller,
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _homeMediaListTile(
-    String mediaType,
-    List<Media> mediaList,
-    BuildContext context,
-    HomeController controller,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 10),
-        Text(
-          mediaType,
-          style: const TextStyle(fontSize: 15, color: Colors.white60),
-        ),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: mediaList.length,
-          itemBuilder: (context, index) {
-            final media = mediaList[index];
-            return ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-              leading: media.type == "Audio"
-                  ? const Icon(
-                      Icons.play_circle_outline,
-                      color: AppColors.iconAudio,
-                    )
-                  : const Icon(
-                      Icons.ondemand_video,
-                      color: AppColors.iconVideo,
-                    ),
-              title: Text(
-                media.path.split('/').last.split('.').first,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.white),
-              ),
-              subtitle: Text(
-                "${formatBytes(media.size)} | ${media.duration} | ${media.path.split('.').last}",
-              ),
-              onTap: () => _playMedia(media, context),
-              onLongPress: () =>
-                  _handleMediaOptions(media, context, controller),
-              trailing: IconButton(
-                onPressed: () =>
-                    _handleMediaOptions(media, context, controller),
-                icon: const Icon(Icons.more_horiz),
-                color: Colors.white,
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  void _handleMediaOptions(
-    Media media,
-    BuildContext context,
-    HomeController controller,
-  ) async {
-    final message = await controller.handleMediaOptions(context, media);
-
-    if (message != null && context.mounted) {
+    if (message != null && mounted) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
-  void _playMedia(Media media, BuildContext context) {
+  void _playMedia(Media media) {
     showMediaPlayerDialog(context, media);
   }
 }

@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:media_manager/core/models/media.dart' as app_media;
 
-class MediaPlayerController {
+class MediaPlayerController extends ChangeNotifier {
   final StreamController<bool> _isPlayingController =
       StreamController<bool>.broadcast();
   final StreamController<bool> _isInitializedController =
@@ -140,6 +141,7 @@ class MediaPlayerController {
     _emitDuration(Duration.zero);
   }
 
+  @override
   Future<void> dispose() async {
     log('❌ MediaPlayerController DISPOSE');
     await disposePlayer();
@@ -147,5 +149,6 @@ class MediaPlayerController {
     _isInitializedController.close();
     _positionController.close();
     _durationController.close();
+    super.dispose();
   }
 }
