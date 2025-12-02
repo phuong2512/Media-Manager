@@ -3,7 +3,7 @@ import 'package:media_manager/core/di/locator.dart';
 import 'package:media_manager/core/models/media.dart';
 import 'package:media_manager/presentations/features/home/home_controller.dart';
 import 'package:media_manager/presentations/features/home/widgets/floating_action_button_widget.dart';
-import 'package:media_manager/presentations/features/home/widgets/media_list_tile_widget.dart';
+import 'package:media_manager/presentations/features/home/widgets/home_body.dart';
 import 'package:media_manager/presentations/features/home/widgets/media_player/media_player_dialog.dart';
 import 'package:media_manager/presentations/features/media/media_list_screen.dart';
 import 'package:provider/provider.dart';
@@ -99,45 +99,10 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                 );
               }
 
-              return StreamBuilder<List<Media>>(
-                stream: _controller.homeMediaListStream,
-                builder: (context, mediaSnapshot) {
-                  final homeAudioList = _controller.audioList;
-                  final homeVideoList = _controller.videoList;
-
-                  return SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Drum Removal',
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        MediaListTileWidget(
-                          mediaType: 'Audio',
-                          mediaList: homeAudioList,
-                          controller: _controller,
-                          onTap: _playMedia,
-                          onLongPress: _handleMediaOptions,
-                          onIconPress: _handleMediaOptions,
-                        ),
-                        const SizedBox(height: 10),
-                        MediaListTileWidget(
-                          mediaType: 'Video',
-                          mediaList: homeVideoList,
-                          controller: _controller,
-                          onTap: _playMedia,
-                          onLongPress: _handleMediaOptions,
-                          onIconPress: _handleMediaOptions,
-                        ),
-                      ],
-                    ),
-                  );
-                },
+              return HomeBody(
+                controller: _controller,
+                onPlayMedia: _playMedia,
+                onHandleOptions: _handleMediaOptions,
               );
             },
           ),
