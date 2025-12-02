@@ -1,8 +1,17 @@
 import 'dart:async';
 
 import 'package:media_manager/core/models/media.dart';
-import 'package:media_manager/core/repositories/media/media_repository.dart';
 import 'package:media_manager/core/services/media/media_service.dart';
+
+abstract class MediaRepository {
+  Future<bool> checkPermissions();
+  Future<bool> deleteMedia(String path);
+  Future<Media?> renameMedia(Media media, String newName);
+  Future<bool> shareMedia(String path);
+  Future<List<Media>> scanDeviceDirectory();
+  Stream<String> get onMediaDeleted;
+  Stream<Map<String, Media>> get onMediaRenamed;
+}
 
 class MediaRepositoryImpl implements MediaRepository {
   final MediaService _service;
@@ -11,8 +20,7 @@ class MediaRepositoryImpl implements MediaRepository {
   final _mediaRenamedController =
       StreamController<Map<String, Media>>.broadcast();
 
-  MediaRepositoryImpl({required MediaService dataSource})
-    : _service = dataSource;
+  MediaRepositoryImpl({required MediaService service}) : _service = service;
 
   @override
   Stream<String> get onMediaDeleted => _mediaDeletedController.stream;

@@ -3,9 +3,14 @@ import 'dart:io';
 
 import 'package:media_kit/media_kit.dart';
 
-class DurationService {
+abstract class DurationService {
+  Future<String> getMediaDuration(String filePath, String type);
+}
+
+class DurationServiceImpl implements DurationService {
   final Map<String, Map<String, dynamic>> _durationCache = {};
 
+  @override
   Future<String> getMediaDuration(String filePath, String type) async {
     try {
       final file = File(filePath);

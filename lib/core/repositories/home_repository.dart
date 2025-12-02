@@ -1,11 +1,16 @@
 import 'package:media_manager/core/models/media.dart';
-import 'package:media_manager/core/repositories/home/home_repository.dart';
 import 'package:media_manager/core/services/home/home_service.dart';
+
+abstract class HomeRepository {
+  Future<bool> saveHomeMediaList(List<Media> mediaList);
+  Future<List<Media>> loadHomeMediaList();
+  Future<bool> clearHomeMediaList();
+}
 
 class HomeRepositoryImpl implements HomeRepository {
   final HomeService _service;
 
-  HomeRepositoryImpl({required HomeService dataSource}) : _service = dataSource;
+  HomeRepositoryImpl({required HomeService service}) : _service = service;
 
   @override
   Future<List<Media>> loadHomeMediaList() async {

@@ -1,8 +1,6 @@
 import 'package:get_it/get_it.dart';
-import 'package:media_manager/core/repositories/home/home_repository.dart';
-import 'package:media_manager/core/repositories/home/home_repository_impl.dart';
-import 'package:media_manager/core/repositories/media/media_repository.dart';
-import 'package:media_manager/core/repositories/media/media_repository_impl.dart';
+import 'package:media_manager/core/repositories/home_repository.dart';
+import 'package:media_manager/core/repositories/media_repository.dart';
 import 'package:media_manager/core/services/home/home_service.dart';
 import 'package:media_manager/core/services/media/duration_service.dart';
 import 'package:media_manager/core/services/media/media_scanner_service.dart';
@@ -20,12 +18,12 @@ Future<void> setupLocator() async {
 
   /// Home
   // Services
-  getIt.registerLazySingleton(
-    () => HomeService(getIt<SharedPreferencesAsync>()),
+  getIt.registerLazySingleton<HomeService>(
+    () => HomeServiceImpl(prefs: getIt<SharedPreferencesAsync>()),
   );
   // Repositories
   getIt.registerLazySingleton<HomeRepository>(
-    () => HomeRepositoryImpl(dataSource: getIt<HomeService>()),
+    () => HomeRepositoryImpl(service: getIt<HomeService>()),
   );
 
   // Controllers
@@ -39,17 +37,17 @@ Future<void> setupLocator() async {
 
   /// Media
   // Services
-  getIt.registerLazySingleton(() => DurationService());
-  getIt.registerLazySingleton(
-    () => MediaScannerService(getIt<DurationService>()),
+  getIt.registerLazySingleton<DurationService>(() => DurationServiceImpl());
+  getIt.registerLazySingleton<MediaScannerService>(
+    () => MediaScannerServiceImpl(getIt<DurationService>()),
   );
-  getIt.registerLazySingleton(
-    () => MediaService(scanner: getIt<MediaScannerService>()),
+  getIt.registerLazySingleton<MediaService>(
+    () => MediaServiceImpl(scanner: getIt<MediaScannerService>()),
   );
 
   // Repositories
   getIt.registerLazySingleton<MediaRepository>(
-    () => MediaRepositoryImpl(dataSource: getIt<MediaService>()),
+    () => MediaRepositoryImpl(service: getIt<MediaService>()),
   );
 
   // Controllers

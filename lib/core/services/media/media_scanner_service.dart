@@ -6,7 +6,13 @@ import 'package:media_manager/core/services/media/duration_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
 
-class MediaScannerService {
+abstract class MediaScannerService {
+  Future<List<Media>> scanDeviceDirectory();
+  Future<bool> requestStoragePermissions();
+  Future<List<Directory>> getCandidateRoots();
+}
+
+class MediaScannerServiceImpl implements MediaScannerService {
   static const _audioExtensions = [
     '.mp3',
     '.m4a',
@@ -26,8 +32,9 @@ class MediaScannerService {
 
   final DurationService _durationService;
 
-  MediaScannerService(this._durationService);
+  MediaScannerServiceImpl(this._durationService);
 
+  @override
   Future<List<Media>> scanDeviceDirectory() async {
     final hasPermission = await requestStoragePermissions();
     if (!hasPermission) return [];
@@ -70,6 +77,7 @@ class MediaScannerService {
     return items;
   }
 
+  @override
   Future<bool> requestStoragePermissions() async {
     Map<Permission, PermissionStatus> statuses = await [
       Permission.storage,
@@ -86,6 +94,7 @@ class MediaScannerService {
     return false;
   }
 
+  @override
   Future<List<Directory>> getCandidateRoots() async {
     final result = <Directory>[];
     result.addAll([
