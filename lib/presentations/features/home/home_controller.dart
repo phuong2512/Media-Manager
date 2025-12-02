@@ -3,15 +3,28 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:media_manager/core/models/media.dart';
-import 'package:media_manager/core/repositories/home_repository.dart';
 import 'package:media_manager/core/repositories/media_repository.dart';
+import 'package:media_manager/core/use_cases/clear_home_media.dart';
+import 'package:media_manager/core/use_cases/delete_media.dart';
+import 'package:media_manager/core/use_cases/load_home_media.dart';
+import 'package:media_manager/core/use_cases/observe_media_deleted.dart';
+import 'package:media_manager/core/use_cases/observe_media_renamed.dart';
+import 'package:media_manager/core/use_cases/rename_media.dart';
+import 'package:media_manager/core/use_cases/save_home_media.dart';
+import 'package:media_manager/core/use_cases/share_media.dart';
 import 'package:media_manager/core/widgets/bottom_sheet/media_options_bottom_sheet.dart';
 import 'package:media_manager/core/widgets/dialogs/delete_media_dialog.dart';
 import 'package:media_manager/core/widgets/dialogs/rename_media_dialog.dart';
 
 class HomeController extends ChangeNotifier {
-  final HomeRepository _homeRepository;
-  final MediaRepository _mediaRepository;
+  final LoadHomeMedia _loadHomeMedia;
+  final ClearHomeMedia _clearHomeMedia;
+  final SaveHomeMedia _saveHomeMedia;
+  final DeleteMedia _deleteMedia;
+  final RenameMedia _renameMedia;
+  final ShareMedia _shareMedia;
+  final ObserveMediaDeleted _observeMediaDeleted;
+  final ObserveMediaRenamed _observeMediaRenamed;
 
   final StreamController<List<Media>> _homeMediaListController =
       StreamController<List<Media>>.broadcast();
@@ -24,20 +37,33 @@ class HomeController extends ChangeNotifier {
   late final StreamSubscription _renameSubscription;
 
   HomeController({
-    required HomeRepository homeRepository,
     required MediaRepository mediaRepository,
-  }) : _homeRepository = homeRepository,
-       _mediaRepository = mediaRepository {
+    required ClearHomeMedia clearHomeMedia,
+    required LoadHomeMedia loadHomeMedia,
+    required SaveHomeMedia saveHomeMedia,
+    required DeleteMedia deleteMedia,
+    required RenameMedia renameMedia,
+    required ShareMedia shareMedia,
+    required ObserveMediaDeleted observeMediaDeleted,
+    required ObserveMediaRenamed observeMediaRenamed,
+  }) : _clearHomeMedia = clearHomeMedia,
+       _saveHomeMedia = saveHomeMedia,
+       _loadHomeMedia = loadHomeMedia,
+       _deleteMedia = deleteMedia,
+       _renameMedia = renameMedia,
+       _shareMedia = shareMedia,
+       _observeMediaDeleted = observeMediaDeleted,
+       _observeMediaRenamed = observeMediaRenamed {
     log('✅ HomeController INIT');
     _emitHomeMediaList([]);
     _emitIsLoading(true);
     loadHomeMediaFromStorage();
 
-    _deleteSubscription = _mediaRepository.onMediaDeleted.listen(
+    _deleteSubscription = _observeMediaDeleted.execute().listen(
       (path) => syncDeleteMedia(path),
     );
 
-    _renameSubscription = _mediaRepository.onMediaRenamed.listen(
+    _renameSubscription = _observeMediaRenamed.execute().listen(
       (eventMap) => syncRenameMedia(eventMap),
     );
   }
@@ -70,7 +96,7 @@ class HomeController extends ChangeNotifier {
   Future<void> loadHomeMediaFromStorage() async {
     try {
       _emitIsLoading(true);
-      final savedMedia = await _homeRepository.loadHomeMediaList();
+      final savedMedia = await _loadHomeMedia.execute();
       _emitHomeMediaList(savedMedia);
       _emitIsLoading(false);
     } catch (e) {
@@ -81,7 +107,7 @@ class HomeController extends ChangeNotifier {
 
   Future<void> _saveHomeMediaToStorage() async {
     try {
-      await _homeRepository.saveHomeMediaList(_homeMediaList);
+      await _saveHomeMedia.execute(_homeMediaList);
     } catch (e) {
       log('Error saving home media to storage: $e');
     }
@@ -99,13 +125,13 @@ class HomeController extends ChangeNotifier {
   Future<void> clearHomeMediaList() async {
     if (_homeMediaList.isEmpty) return;
 
-    if (await _homeRepository.clearHomeMediaList()) {
+    if (await _clearHomeMedia.execute()) {
       _emitHomeMediaList([]);
     }
   }
 
   Future<bool> deleteMedia(String path) async {
-    final success = await _mediaRepository.deleteMedia(path);
+    final success = await _deleteMedia.execute(path);
     if (success) {
       final updatedList = _homeMediaList.where((m) => m.path != path).toList();
       _emitHomeMediaList(updatedList);
@@ -115,7 +141,7 @@ class HomeController extends ChangeNotifier {
   }
 
   Future<bool> renameMedia(Media media, String newName) async {
-    final updatedMedia = await _mediaRepository.renameMedia(media, newName);
+    final updatedMedia = await _renameMedia.execute(media, newName);
     if (updatedMedia != null) {
       final updatedList = List<Media>.from(_homeMediaList);
       final homeIndex = updatedList.indexWhere((m) => m.path == media.path);
@@ -130,7 +156,7 @@ class HomeController extends ChangeNotifier {
   }
 
   Future<bool> shareMedia(String path) async {
-    return await _mediaRepository.shareMedia(path);
+    return await _shareMedia.execute(path);
   }
 
   Future<void> syncDeleteMedia(String path) async {

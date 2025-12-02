@@ -4,7 +4,12 @@ import 'package:media_manager/presentations/features/home/home_controller.dart';
 class FloatingActionButtonWidget extends StatelessWidget {
   final HomeController controller;
   final VoidCallback onPress;
-  const FloatingActionButtonWidget({super.key, required this.controller, required this.onPress});
+
+  const FloatingActionButtonWidget({
+    super.key,
+    required this.controller,
+    required this.onPress,
+  });
 
   @override
   Widget build(BuildContext context) {
