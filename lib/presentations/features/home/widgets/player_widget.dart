@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/core/utils/app_colors.dart';
 import 'package:media_manager/presentations/features/home/widgets/media_player/media_player_controller.dart';
-import 'package:media_manager/presentations/features/home/widgets/media_player/wigets/video_widget.dart';
+import 'package:media_manager/presentations/features/home/widgets/video_widget.dart';
 
 class PlayerWidget extends StatelessWidget {
   final MediaPlayerController controller;

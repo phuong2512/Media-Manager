@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/core/utils/app_colors.dart';
 
-class MediaTabSwitchWidget extends StatelessWidget {
+class MediaSwitchTab extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onTabSelected;
 
-  const MediaTabSwitchWidget({
+  const MediaSwitchTab({
     super.key,
     required this.selectedIndex,
     required this.onTabSelected,

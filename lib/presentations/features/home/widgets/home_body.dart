@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/core/models/media.dart';
 import 'package:media_manager/presentations/features/home/home_controller.dart';
-import 'package:media_manager/presentations/features/home/widgets/media_list_tile_widget.dart';
+import 'package:media_manager/presentations/features/home/widgets/media_list_tile.dart';
 
 class HomeBody extends StatelessWidget {
   final HomeController controller;
@@ -35,7 +35,7 @@ class HomeBody extends StatelessWidget {
                   color: Colors.white,
                 ),
               ),
-              MediaListTileWidget(
+              MediaListTile(
                 mediaType: 'Audio',
                 mediaList: homeAudioList,
                 controller: controller,
@@ -44,7 +44,7 @@ class HomeBody extends StatelessWidget {
                 onIconPress: onHandleOptions,
               ),
               const SizedBox(height: 10),
-              MediaListTileWidget(
+              MediaListTile(
                 mediaType: 'Video',
                 mediaList: homeVideoList,
                 controller: controller,

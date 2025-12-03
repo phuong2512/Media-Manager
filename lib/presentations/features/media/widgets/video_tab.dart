@@ -1,6 +1,9 @@
+import 'dart:typed_data'; // Import để dùng Uint8List
+
 import 'package:flutter/material.dart';
 import 'package:media_manager/core/models/media.dart';
 import 'package:media_manager/core/utils/app_colors.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 class VideoTab extends StatelessWidget {
   final List videoList;
@@ -48,17 +51,27 @@ class VideoTab extends StatelessWidget {
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            Container(
-                              decoration: const BoxDecoration(
-                                color: AppColors.fill,
-                              ),
-                            ),
+                            _buildThumbnail(video.path),
+
                             Positioned(
                               bottom: 4,
                               right: 4,
-                              child: Text(
-                                video.duration,
-                                style: const TextStyle(color: Colors.white),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.7),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  video.duration,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -69,6 +82,33 @@ class VideoTab extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildThumbnail(String path) {
+    return FutureBuilder<Uint8List?>(
+      future: VideoThumbnail.thumbnailData(
+        video: path,
+        imageFormat: ImageFormat.JPEG,
+        maxWidth: 128,
+        quality: 100,
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.data != null) {
+          return Image.memory(snapshot.data!, fit: BoxFit.cover);
+        }
+        return Container(
+          color: AppColors.fill,
+          child: const Center(
+            child: Icon(
+              Icons.play_circle_outline,
+              color: Colors.white24,
+              size: 30,
+            ),
+          ),
+        );
+      },
     );
   }
 }

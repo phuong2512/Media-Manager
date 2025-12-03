@@ -3,7 +3,12 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:media_manager/core/models/media.dart';
-import 'package:media_manager/core/repositories/media_repository.dart';
+import 'package:media_manager/core/use_cases/delete_media.dart';
+import 'package:media_manager/core/use_cases/observe_media_deleted.dart';
+import 'package:media_manager/core/use_cases/observe_media_renamed.dart';
+import 'package:media_manager/core/use_cases/rename_media.dart';
+import 'package:media_manager/core/use_cases/scan_media.dart';
+import 'package:media_manager/core/use_cases/share_media.dart';
 import 'package:media_manager/core/widgets/bottom_sheet/media_options_bottom_sheet.dart';
 import 'package:media_manager/core/widgets/dialogs/delete_media_dialog.dart';
 import 'package:media_manager/core/widgets/dialogs/rename_media_dialog.dart';
@@ -11,7 +16,12 @@ import 'package:media_manager/core/widgets/dialogs/rename_media_dialog.dart';
 enum SortOrder { none, newestFirst, oldestFirst }
 
 class MediaListController extends ChangeNotifier {
-  final MediaRepository _repository;
+  final ScanDevice _scanDevice;
+  final RenameMedia _renameMedia;
+  final DeleteMedia _deleteMedia;
+  final ShareMedia _shareMedia;
+  final ObserveMediaDeleted _observeMediaDeleted;
+  final ObserveMediaRenamed _observeMediaRenamed;
 
   final StreamController<List<Media>> _mediaListController =
       StreamController<List<Media>>.broadcast();
@@ -30,19 +40,30 @@ class MediaListController extends ChangeNotifier {
   late final StreamSubscription _deleteSubscription;
   late final StreamSubscription _renameSubscription;
 
-  MediaListController({required MediaRepository repository})
-    : _repository = repository {
+  MediaListController({
+    required ScanDevice scanDevice,
+    required RenameMedia renameMedia,
+    required DeleteMedia deleteMedia,
+    required ShareMedia shareMedia,
+    required ObserveMediaDeleted observeMediaDeleted,
+    required ObserveMediaRenamed observeMediaRenamed,
+  }) : _scanDevice = scanDevice,
+       _deleteMedia = deleteMedia,
+       _renameMedia = renameMedia,
+       _shareMedia = shareMedia,
+       _observeMediaRenamed = observeMediaRenamed,
+       _observeMediaDeleted = observeMediaDeleted {
     log('✅ MediaListController INIT');
     _emitMediaList([]);
     _emitIsScanning(false);
     _emitIsLibraryScanned(false);
     _emitSortOrder(SortOrder.none);
 
-    _deleteSubscription = _repository.onMediaDeleted.listen(
+    _deleteSubscription = _observeMediaDeleted.execute().listen(
       (path) => _handleMediaDeleted(path),
     );
 
-    _renameSubscription = _repository.onMediaRenamed.listen(
+    _renameSubscription = _observeMediaRenamed.execute().listen(
       (event) => _handleMediaRenamed(event),
     );
   }
@@ -123,15 +144,15 @@ class MediaListController extends ChangeNotifier {
   }
 
   Future<bool> deleteMedia(String path) async {
-    return await _repository.deleteMedia(path);
+    return await _deleteMedia.execute(path);
   }
 
   Future<Media?> renameMedia(Media media, String newName) async {
-    return await _repository.renameMedia(media, newName);
+    return await _renameMedia.execute(media, newName);
   }
 
   Future<bool> shareMedia(String path) async {
-    return await _repository.shareMedia(path);
+    return await _shareMedia.execute(path);
   }
 
   void sortToggleByLastModified(SortOrder order) {
@@ -154,7 +175,7 @@ class MediaListController extends ChangeNotifier {
     _emitIsScanning(true);
 
     try {
-      final scanned = await _repository.scanDeviceDirectory();
+      final scanned = await _scanDevice.execute();
       _emitMediaList(scanned);
       _emitIsLibraryScanned(true);
 
@@ -174,7 +195,7 @@ class MediaListController extends ChangeNotifier {
     _emitIsScanning(true);
 
     try {
-      final scanned = await _repository.scanDeviceDirectory();
+      final scanned = await _scanDevice.execute();
       _emitMediaList(scanned);
       _emitIsLibraryScanned(true);
 

@@ -5,7 +5,7 @@ import 'package:media_manager/core/utils/app_colors.dart';
 import 'package:media_manager/presentations/features/media/media_list_controller.dart';
 import 'package:media_manager/presentations/features/media/widgets/audio_tab.dart';
 import 'package:media_manager/presentations/features/media/widgets/media_search_bar.dart';
-import 'package:media_manager/presentations/features/media/widgets/media_tab_switch_widget.dart';
+import 'package:media_manager/presentations/features/media/widgets/media_switch_tab.dart';
 import 'package:media_manager/presentations/features/media/widgets/sort_options_dialog.dart';
 import 'package:media_manager/presentations/features/media/widgets/video_tab.dart';
 import 'package:provider/provider.dart';
@@ -98,7 +98,7 @@ class _MediaListScreenContentState extends State<_MediaListScreenContent>
               ),
             ),
             leadingWidth: 100,
-            title: MediaTabSwitchWidget(
+            title: MediaSwitchTab(
               selectedIndex: selectedTabIndex,
               onTabSelected: (index) =>
                   setState(() => selectedTabIndex = index),

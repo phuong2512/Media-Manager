@@ -5,7 +5,6 @@ import 'package:media_manager/core/services/home/home_service.dart';
 import 'package:media_manager/core/services/media/duration_service.dart';
 import 'package:media_manager/core/services/media/media_scanner_service.dart';
 import 'package:media_manager/core/services/media/media_service.dart';
-import 'package:media_manager/core/use_cases/check_permissions.dart';
 import 'package:media_manager/core/use_cases/clear_home_media.dart';
 import 'package:media_manager/core/use_cases/delete_media.dart';
 import 'package:media_manager/core/use_cases/load_home_media.dart';
@@ -74,11 +73,17 @@ Future<void> setupLocator() async {
 
   // Controllers
   getIt.registerFactory(
-    () => MediaListController(repository: getIt<MediaRepository>()),
+    () => MediaListController(
+      scanDevice: getIt<ScanDevice>(),
+      deleteMedia: getIt<DeleteMedia>(),
+      renameMedia: getIt<RenameMedia>(),
+      shareMedia: getIt<ShareMedia>(),
+      observeMediaDeleted: getIt<ObserveMediaDeleted>(),
+      observeMediaRenamed: getIt<ObserveMediaRenamed>(),
+    ),
   );
 
   // Use cases
-  getIt.registerFactory(() => CheckPermissions(getIt<MediaRepository>()));
   getIt.registerFactory(() => DeleteMedia(getIt<MediaRepository>()));
   getIt.registerFactory(() => RenameMedia(getIt<MediaRepository>()));
   getIt.registerFactory(() => ShareMedia(getIt<MediaRepository>()));

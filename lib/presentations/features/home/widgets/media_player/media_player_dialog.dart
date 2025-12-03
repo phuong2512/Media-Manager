@@ -3,8 +3,8 @@ import 'package:media_manager/core/di/locator.dart';
 import 'package:media_manager/core/models/media.dart';
 import 'package:media_manager/core/utils/app_colors.dart';
 import 'package:media_manager/presentations/features/home/widgets/media_player/media_player_controller.dart';
-import 'package:media_manager/presentations/features/home/widgets/media_player/wigets/media_controller_widget.dart';
-import 'package:media_manager/presentations/features/home/widgets/media_player/wigets/player_widget.dart';
+import 'package:media_manager/presentations/features/home/widgets/media_controller_widget.dart';
+import 'package:media_manager/presentations/features/home/widgets/player_widget.dart';
 import 'package:provider/provider.dart';
 
 Future<void> showMediaPlayerDialog(BuildContext context, Media media) async {
