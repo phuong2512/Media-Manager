@@ -34,7 +34,7 @@ class MediaPlayerDialog extends StatelessWidget {
 class _MediaPlayerDialogContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final controller = context.watch<MediaPlayerController>();
+    final controller = context.read<MediaPlayerController>();
 
     return StreamBuilder<bool>(
       stream: controller.isInitializedStream,
@@ -70,8 +70,8 @@ class _MediaPlayerDialogContent extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                PlayerWidget(controller: controller),
-                MediaControllerWidget(controller: controller),
+                PlayerWidget(),
+                MediaControllerWidget(),
               ],
             ),
           ),

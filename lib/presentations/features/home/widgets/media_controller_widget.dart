@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/presentations/features/home/widgets/media_player/media_player_controller.dart';
+import 'package:provider/provider.dart';
 
 class MediaControllerWidget extends StatelessWidget {
-  final MediaPlayerController controller;
-
-  const MediaControllerWidget({super.key, required this.controller});
+  const MediaControllerWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.read<MediaPlayerController>();
+
     return Column(
       children: [
         StreamBuilder<Duration>(

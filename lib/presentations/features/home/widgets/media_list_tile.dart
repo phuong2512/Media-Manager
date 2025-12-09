@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:media_manager/core/models/media.dart';
 import 'package:media_manager/core/utils/app_colors.dart';
 import 'package:media_manager/core/utils/format.dart';
-import 'package:media_manager/presentations/features/home/home_controller.dart';
 
 class MediaListTile extends StatelessWidget {
   final String mediaType;
   final List<Media> mediaList;
-  final HomeController controller;
   final void Function(Media) onTap;
   final void Function(Media) onLongPress;
   final void Function(Media) onIconPress;
@@ -16,7 +14,6 @@ class MediaListTile extends StatelessWidget {
     super.key,
     required this.mediaType,
     required this.mediaList,
-    required this.controller,
     required this.onTap,
     required this.onLongPress,
     required this.onIconPress,

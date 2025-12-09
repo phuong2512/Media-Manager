@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:media_manager/core/utils/app_colors.dart';
 import 'package:media_manager/presentations/features/home/widgets/media_player/media_player_controller.dart';
 import 'package:media_manager/presentations/features/home/widgets/video_widget.dart';
+import 'package:provider/provider.dart';
 
 class PlayerWidget extends StatelessWidget {
-  final MediaPlayerController controller;
 
-  const PlayerWidget({super.key, required this.controller});
+  const PlayerWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.read<MediaPlayerController>();
+
     return Expanded(
       child: Column(
         children: [
@@ -73,7 +75,7 @@ class PlayerWidget extends StatelessWidget {
             ),
           ),
           if (controller.isVideo)
-            Expanded(child: VideoWidget(controller: controller)),
+            Expanded(child: VideoWidget()),
         ],
       ),
     );

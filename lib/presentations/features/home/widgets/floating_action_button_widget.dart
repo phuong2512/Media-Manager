@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:media_manager/presentations/features/home/home_controller.dart';
+import 'package:provider/provider.dart';
 
 class FloatingActionButtonWidget extends StatelessWidget {
-  final HomeController controller;
   final VoidCallback onPress;
 
   const FloatingActionButtonWidget({
     super.key,
-    required this.controller,
     required this.onPress,
   });
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.read<HomeController>();
+
     return Container(
       width: 56,
       height: 56,

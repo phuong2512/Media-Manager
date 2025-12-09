@@ -100,7 +100,6 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
               }
 
               return HomeBody(
-                controller: _controller,
                 onPlayMedia: _playMedia,
                 onHandleOptions: _handleMediaOptions,
               );
@@ -110,7 +109,6 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButtonWidget(
-        controller: _controller,
         onPress: _addMediaToHome,
       ),
     );
